@@ -1,25 +1,60 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FDF9F1;
-  --foreground: #08422E;
-  --petou-green: #08422E;
-  --petou-yellow: #FAB31F;
-  --petou-cream: #FDF9F1;
+  --background: #FAF8F2;
+  --foreground: #202C27;
+  --petou-dark-green: #174C3C;
+  --petou-sage: #78916D;
+  --petou-soft-green: #E8EFE5;
+  --petou-cream: #FAF8F2;
   --petou-white: #FFFFFF;
+  --petou-coral: #F47C49;
+  --petou-text-dark: #202C27;
+  --petou-text-muted: #66716A;
+  --petou-green: #174C3C;
+  --petou-yellow: #FAB31F;
 }
 
 @theme {
-  --color-petou-green: #08422E;
-  --color-petou-yellow: #FAB31F;
-  --color-petou-cream: #FDF9F1;
+  --color-petou-dark-green: #174C3C;
+  --color-petou-sage: #78916D;
+  --color-petou-soft-green: #E8EFE5;
+  --color-petou-cream: #FAF8F2;
   --color-petou-white: #FFFFFF;
-  --font-nunito: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --color-petou-coral: #F47C49;
+  --color-petou-text-dark: #202C27;
+  --color-petou-text-muted: #66716A;
+  --color-petou-green: #174C3C;
+  --color-petou-yellow: #FAB31F;
+  --font-sans: var(--font-manrope), var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-manrope), sans-serif;
+  --font-body: var(--font-dm-sans), sans-serif;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-nunito), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-dm-sans), var(--font-manrope), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-manrope), sans-serif;
+}
+
+/* WCAG 2.2 AA Focus Indicators */
+:focus-visible {
+  outline: 2px solid var(--petou-dark-green);
+  outline-offset: 2px;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

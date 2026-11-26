@@ -1,29 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Search, ShoppingBag, Menu, X, MessageCircle } from "lucide-react";
-import { CATEGORIES, Category } from "@/data/products";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Truck,
+  Dog,
+  Cat,
+  Utensils,
+  Sparkles,
+  Tag,
+  Search,
+  ShoppingBag,
+  Menu,
+  X,
+  MessageCircle,
+} from "lucide-react";
+import { Category } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 
 interface HeaderProps {
   cartCount?: number;
   onOpenCart?: () => void;
-  selectedCategory: Category;
-  onSelectCategory: (cat: Category) => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  selectedCategory?: Category;
+  onSelectCategory?: (cat: Category) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
+
+const NAV_CATEGORIES = [
+  { name: "Cães", category: "Rações para cães" as Category, slug: "caes", icon: Dog },
+  { name: "Gatos", category: "Rações para gatos" as Category, slug: "gatos", icon: Cat },
+  { name: "Alimentação", category: "Petiscos" as Category, slug: "alimentacao", icon: Utensils },
+  { name: "Higiene e cuidados", category: "Higiene" as Category, slug: "higiene", icon: Sparkles },
+  { name: "Acessórios", category: "Acessórios" as Category, slug: "acessorios", icon: Tag },
+];
 
 export default function Header({
   cartCount,
   onOpenCart,
   selectedCategory,
   onSelectCategory,
-  searchQuery,
-  onSearchChange,
+  searchQuery: externalQuery,
+  onSearchChange: externalChange,
 }: HeaderProps) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [internalQuery, setInternalQuery] = useState("");
+
+  const currentQuery = externalQuery !== undefined ? externalQuery : internalQuery;
+  const setQuery = externalChange !== undefined ? externalChange : setInternalQuery;
+
   const { totalCount, openCart } = useCart();
   const effectiveCartCount = cartCount ?? totalCount;
   const handleOpenCart = onOpenCart ?? openCart;
@@ -31,197 +59,255 @@ export default function Header({
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5591980762149";
   const cleanNumber = whatsappNumber.replace(/\D/g, "");
 
+  // WCAG 2.2: Esc key closes mobile menu
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (currentQuery.trim()) {
+      router.push(`/busca?q=${encodeURIComponent(currentQuery.trim())}`);
+      setMobileMenuOpen(false);
+    }
+  };
+
+  const handleNavClick = (cat: Category, slug: string) => {
+    if (onSelectCategory) {
+      onSelectCategory(cat);
+    }
+    setMobileMenuOpen(false);
+    router.push(`/categoria/${slug}`);
+  };
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-petou-cream/95 backdrop-blur-md border-b border-petou-green/10 transition-all">
-      {/* Top micro bar for Barcarena delivery info */}
-      <div className="bg-petou-green text-petou-white text-xs py-1.5 px-4 text-center font-medium">
+    <header className="sticky top-0 z-40 w-full bg-[#FAF8F2]/95 backdrop-blur-md border-b border-[#E8EFE5] transition-all">
+      {/* Top Announcement Bar */}
+      <aside aria-label="Aviso de entrega" className="bg-[#174C3C] text-[#FAF8F2] text-xs py-2 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2">
+        <Truck className="w-3.5 h-3.5 text-[#F47C49]" aria-hidden="true" />
         <span>
-          📍 Atendimento e entregas rápidas em toda a região de <strong>Barcarena</strong> | Estoque sob consulta
+          Entrega local em Barcarena • <strong>Consulte disponibilidade</strong>
         </span>
-      </div>
+      </aside>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
-          {/* Brand Logo */}
-          <a href="#" className="flex items-center shrink-0">
-            <div className="relative w-36 sm:w-44 h-12">
-              <Image
-                src="/petou-logo.png"
-                alt="Petou Store"
-                fill
-                priority
-                className="object-contain object-left"
-              />
-            </div>
-          </a>
+          
+          {/* Left: PETOU paw logo + Tagline */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/"
+              aria-label="Página inicial PETOU Store"
+              className="flex items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+            >
+              <div className="relative w-32 sm:w-36 h-10">
+                <Image
+                  src="/petou-logo.png"
+                  alt="PETOU - Logotipo oficial"
+                  fill
+                  priority
+                  sizes="(max-width: 640px) 128px, 144px"
+                  className="object-contain object-left"
+                />
+              </div>
+            </Link>
+            <div className="hidden xl:block h-6 w-px bg-[#E8EFE5]" aria-hidden="true" />
+            <span className="hidden xl:block text-xs font-medium text-[#66716A]">
+              Cuidado que acompanha você.
+            </span>
+          </div>
 
-          {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Buscar rações, petiscos, brinquedos..."
-                className="w-full bg-petou-white text-petou-green placeholder-petou-green/50 text-sm rounded-full pl-11 pr-4 py-2.5 border border-petou-green/15 focus:outline-none focus:ring-2 focus:ring-petou-yellow focus:border-transparent transition shadow-sm"
-              />
-              <Search className="absolute left-3.5 top-3 w-4 h-4 text-petou-green/60" />
-              {searchQuery && (
+          {/* Center: Desktop Navigation */}
+          <nav aria-label="Navegação de categorias de produtos" className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {NAV_CATEGORIES.map((item) => {
+              const Icon = item.icon;
+              const isActive = selectedCategory === item.category;
+              return (
                 <button
-                  onClick={() => onSearchChange("")}
-                  className="absolute right-3 top-2.5 text-petou-green/50 hover:text-petou-green text-xs"
+                  key={item.name}
+                  type="button"
+                  onClick={() => handleNavClick(item.category, item.slug)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-all min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${
+                    isActive
+                      ? "bg-[#174C3C] text-[#FFFFFF] shadow-sm"
+                      : "text-[#202C27] hover:text-[#174C3C] hover:bg-[#E8EFE5]/70"
+                  }`}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon className="w-4 h-4 stroke-[1.8]" aria-hidden="true" />
+                  <span>{item.name}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Right: Search + Cart */}
+          <div className="flex items-center gap-3">
+            {/* Search Pill - Desktop & Tablet */}
+            <form onSubmit={handleSearchSubmit} role="search" className="hidden sm:flex relative w-48 md:w-56 lg:w-64">
+              <label htmlFor="desktop-search-input" className="sr-only">
+                Buscar produtos na PETOU Store
+              </label>
+              <input
+                id="desktop-search-input"
+                type="search"
+                value={currentQuery}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Buscar produtos..."
+                className="w-full bg-[#FFFFFF] text-[#202C27] placeholder-[#66716A]/75 text-xs sm:text-sm rounded-full pl-9 pr-7 py-2.5 border border-[#E8EFE5] focus-visible:outline-2 focus-visible:outline-[#174C3C] transition shadow-sm min-h-[44px]"
+              />
+              <button
+                type="submit"
+                aria-label="Executar pesquisa de produtos"
+                className="absolute left-3 top-3 text-[#66716A] hover:text-[#174C3C] focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded"
+              >
+                <Search className="w-4 h-4" aria-hidden="true" />
+              </button>
+              {currentQuery && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Limpar termo de busca"
+                  className="absolute right-2.5 top-2.5 text-[#66716A] hover:text-[#202C27] text-xs font-bold p-1 rounded focus-visible:outline-2 focus-visible:outline-[#174C3C]"
                 >
                   ✕
                 </button>
               )}
-            </div>
-          </div>
+            </form>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-petou-green">
-            <a href="#produtos" className="hover:text-petou-yellow transition">
-              Produtos
-            </a>
-            <a href="#colecoes" className="hover:text-petou-yellow transition">
-              Coleções
-            </a>
-            <a href="#vantagens" className="hover:text-petou-yellow transition">
-              Vantagens
-            </a>
-            <a
-              href={`https://wa.me/${cleanNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-petou-green hover:text-petou-yellow transition"
-            >
-              <MessageCircle className="w-4 h-4 text-petou-yellow" />
-              WhatsApp
-            </a>
-          </nav>
-
-          {/* Cart Button */}
-          <div className="flex items-center gap-3">
+            {/* Dark green cart button */}
             <button
+              type="button"
               onClick={handleOpenCart}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-petou-green text-petou-white hover:bg-petou-green/90 transition shadow-md shadow-petou-green/20"
-              aria-label="Abrir carrinho de compras"
+              aria-label={`Abrir carrinho com ${effectiveCartCount} ${
+                effectiveCartCount === 1 ? "item" : "itens"
+              }`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#174C3C] text-[#FFFFFF] hover:bg-[#174C3C]/90 active:scale-95 transition-all shadow-md shadow-[#174C3C]/15 min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] focus-visible:outline-offset-2"
             >
-              <ShoppingBag className="w-4 h-4 text-petou-yellow" />
-              <span className="text-sm font-bold hidden sm:inline">Carrinho</span>
-              <span className="w-6 h-6 rounded-full bg-petou-yellow text-petou-green text-xs font-black flex items-center justify-center">
+              <ShoppingBag className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
+              <span className="text-xs sm:text-sm font-bold hidden md:inline">Carrinho</span>
+              <span className="w-5 h-5 rounded-full bg-[#F47C49] text-[#FFFFFF] text-[11px] font-black flex items-center justify-center">
                 {effectiveCartCount}
               </span>
             </button>
 
             {/* Mobile Menu Toggle */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-petou-green hover:bg-petou-green/10 transition"
-              aria-label="Abrir menu"
+              aria-label={mobileMenuOpen ? "Fechar menu principal" : "Abrir menu principal"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-menu"
+              className="lg:hidden p-2.5 rounded-2xl text-[#174C3C] hover:bg-[#E8EFE5] min-w-[44px] min-h-[44px] flex items-center justify-center transition focus-visible:outline-2 focus-visible:outline-[#174C3C]"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Search Input */}
-        <div className="md:hidden pb-3">
-          <div className="relative w-full">
+        {/* Mobile Search input bar */}
+        <div className="sm:hidden pb-3">
+          <form onSubmit={handleSearchSubmit} role="search" className="relative w-full">
+            <label htmlFor="mobile-search-input" className="sr-only">
+              Buscar produtos na PETOU Store
+            </label>
             <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Buscar produtos ou categorias..."
-              className="w-full bg-petou-white text-petou-green placeholder-petou-green/50 text-sm rounded-full pl-10 pr-4 py-2 border border-petou-green/15 focus:outline-none focus:ring-2 focus:ring-petou-yellow"
+              id="mobile-search-input"
+              type="search"
+              value={currentQuery}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar produtos..."
+              className="w-full bg-[#FFFFFF] text-[#202C27] placeholder-[#66716A]/75 text-xs rounded-full pl-9 pr-7 py-2.5 border border-[#E8EFE5] focus-visible:outline-2 focus-visible:outline-[#174C3C] min-h-[44px]"
             />
-            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-petou-green/60" />
-            {searchQuery && (
+            <button
+              type="submit"
+              aria-label="Executar pesquisa"
+              className="absolute left-3 top-3 text-[#66716A] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+            >
+              <Search className="w-4 h-4" aria-hidden="true" />
+            </button>
+            {currentQuery && (
               <button
-                onClick={() => onSearchChange("")}
-                className="absolute right-3 top-2 text-petou-green/50 text-xs"
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Limpar termo de busca"
+                className="absolute right-2.5 top-2.5 text-[#66716A] text-xs p-1 focus-visible:outline-2 focus-visible:outline-[#174C3C]"
               >
                 ✕
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Category Links Subnav */}
-        <div className="hidden sm:flex items-center gap-2 py-2.5 border-t border-petou-green/10 overflow-x-auto no-scrollbar text-xs font-medium text-petou-green/80">
-          <span className="font-bold text-petou-green text-xs uppercase tracking-wider shrink-0 mr-1">
-            Categorias:
-          </span>
-          {CATEGORIES.map((category) => (
-            <button
-              key={category}
-              onClick={() => onSelectCategory(category)}
-              className={`px-3 py-1 rounded-full whitespace-nowrap transition ${
-                selectedCategory === category
-                  ? "bg-petou-green text-petou-white font-bold"
-                  : "bg-petou-white/80 hover:bg-petou-white text-petou-green border border-petou-green/10"
-              }`}
-            >
-              {category}
-            </button>
-          ))}
+          </form>
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Clean Mobile Drawer Menu with zero horizontal overflow */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-petou-cream border-t border-petou-green/10 p-6 space-y-4">
-          <nav className="flex flex-col gap-3 font-semibold text-petou-green">
-            <a
-              href="#produtos"
-              onClick={() => setMobileMenuOpen(false)}
-              className="py-1 hover:text-petou-yellow transition"
-            >
-              Produtos em Destaque
-            </a>
-            <a
-              href="#colecoes"
-              onClick={() => setMobileMenuOpen(false)}
-              className="py-1 hover:text-petou-yellow transition"
-            >
-              Coleções Especiais
-            </a>
-            <a
-              href="#vantagens"
-              onClick={() => setMobileMenuOpen(false)}
-              className="py-1 hover:text-petou-yellow transition"
-            >
-              Vantagens Petou
-            </a>
-            <a
-              href={`https://wa.me/${cleanNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-1 flex items-center gap-2 text-petou-green hover:text-petou-yellow transition font-bold"
-            >
-              <MessageCircle className="w-4 h-4 text-petou-yellow" />
-              Falar no WhatsApp
-            </a>
-          </nav>
+        <div
+          id="mobile-navigation-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu principal de navegação"
+          className="lg:hidden fixed inset-x-0 top-[116px] bottom-0 bg-[#FAF8F2] z-50 overflow-y-auto overflow-x-hidden border-t border-[#E8EFE5] p-6 shadow-2xl"
+        >
+          <div className="max-w-md mx-auto space-y-6">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#66716A] mb-3">
+                Categorias Principais
+              </p>
+              <nav aria-label="Menu móvel por categorias" className="grid grid-cols-1 gap-2">
+                {NAV_CATEGORIES.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = selectedCategory === item.category;
+                  return (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => handleNavClick(item.category, item.slug)}
+                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-left text-sm font-semibold transition min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${
+                        isActive
+                          ? "bg-[#174C3C] text-[#FFFFFF]"
+                          : "bg-[#FFFFFF] text-[#202C27] border border-[#E8EFE5] hover:bg-[#E8EFE5]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                            isActive ? "bg-[#FFFFFF]/20 text-[#FFFFFF]" : "bg-[#E8EFE5] text-[#174C3C]"
+                          }`}
+                          aria-hidden="true"
+                        >
+                          <Icon className="w-4 h-4 stroke-[2]" />
+                        </span>
+                        <span>{item.name}</span>
+                      </div>
+                      <span className="text-xs opacity-60" aria-hidden="true">→</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
 
-          <div className="pt-3 border-t border-petou-green/10">
-            <p className="text-xs font-bold text-petou-green uppercase mb-2">Filtrar por Categoria:</p>
-            <div className="flex flex-wrap gap-1.5">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    onSelectCategory(cat);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`text-xs px-2.5 py-1 rounded-full ${
-                    selectedCategory === cat
-                      ? "bg-petou-green text-petou-white font-bold"
-                      : "bg-petou-white text-petou-green border border-petou-green/10"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            <div className="pt-4 border-t border-[#E8EFE5] space-y-3">
+              <a
+                href={`https://wa.me/${cleanNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-[#174C3C] text-[#FFFFFF] text-sm font-bold shadow-md min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+              >
+                <MessageCircle className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
+                <span>Atendimento WhatsApp Barcarena</span>
+              </a>
+
+              <p className="text-center text-xs text-[#66716A]">
+                Cuidado que acompanha você • Barcarena - PA
+              </p>
             </div>
           </div>
         </div>

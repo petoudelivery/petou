@@ -9,7 +9,6 @@ import {
   ShoppingBag,
   MessageCircle,
   AlertCircle,
-  CheckCircle2,
   MapPin,
   CreditCard,
   Banknote,
@@ -47,6 +46,7 @@ export default function CartDrawer() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Pix");
   const [cashChange, setCashChange] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [liveMessage, setLiveMessage] = useState("");
 
   useEffect(() => {
     async function loadData() {
@@ -59,6 +59,17 @@ export default function CartDrawer() {
     }
     loadData();
   }, []);
+
+  // WCAG 2.2: Esc key closes CartDrawer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isCartOpen) {
+        closeCart();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isCartOpen, closeCart]);
 
   const cleanNumber = targetWhatsApp.replace(/\D/g, "");
 
@@ -79,28 +90,46 @@ export default function CartDrawer() {
     return subtotal;
   }, [subtotal, deliveryFee]);
 
+  const handleUpdateQty = (productId: string, productName: string, delta: number) => {
+    updateQuantity(productId, delta);
+    setLiveMessage(`Quantidade de ${productName} alterada.`);
+  };
+
+  const handleRemove = (productId: string, productName: string) => {
+    removeFromCart(productId);
+    setLiveMessage(`${productName} removido do carrinho.`);
+  };
+
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
     // Validations
     if (items.length === 0) {
-      setErrorMessage("Seu carrinho está vazio. Adicione produtos para continuar.");
+      const msg = "Seu carrinho está vazio. Adicione produtos para continuar.";
+      setErrorMessage(msg);
+      setLiveMessage(msg);
       return;
     }
 
     if (!fullName.trim() || fullName.trim().length < 3) {
-      setErrorMessage("Por favor, informe seu nome completo.");
+      const msg = "Por favor, informe seu nome completo.";
+      setErrorMessage(msg);
+      setLiveMessage(msg);
       return;
     }
 
     if (!streetAddress.trim() || streetAddress.trim().length < 5) {
-      setErrorMessage("Por favor, informe seu endereço completo (rua, número e referência).");
+      const msg = "Por favor, informe seu endereço completo (rua, número e referência).";
+      setErrorMessage(msg);
+      setLiveMessage(msg);
       return;
     }
 
     if (!neighborhoodId) {
-      setErrorMessage("Selecione o seu bairro em Barcarena.");
+      const msg = "Selecione o seu bairro em Barcarena.";
+      setErrorMessage(msg);
+      setLiveMessage(msg);
       return;
     }
 
@@ -147,53 +176,69 @@ export default function CartDrawer() {
       `💰 *Total estimado:* ${totalText}`,
       `💳 *Forma de pagamento:* ${paymentText}`,
       `----------------------------------------------`,
-      `⚠️ *Aviso de estoque:* Entendo que nenhum pagamento é realizado online antes da confirmação da disponibilidade dos itens pela equipe Petou.`,
+      `⚠️ *Aviso de estoque:* Nenhum pagamento é realizado online antes da confirmação da disponibilidade dos itens pela equipe Petou.`,
       `\n_Olá! Gostaria de confirmar a disponibilidade e finalizar meu pedido para entrega em Barcarena._`,
     ].join("\n");
 
     const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+    
+    // Do NOT clear cart on failed navigation
     window.open(url, "_blank");
   };
 
   if (!isCartOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cart-drawer-heading"
+      className="fixed inset-0 z-50 overflow-hidden font-sans"
+    >
+      {/* Screen Reader Live Announcements */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {liveMessage}
+      </div>
+
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-petou-green/40 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-[#202C27]/50 backdrop-blur-sm transition-opacity"
         onClick={closeCart}
+        aria-hidden="true"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
-        <div className="w-screen max-w-lg bg-petou-white shadow-2xl flex flex-col">
-
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+        <div className="w-screen max-w-lg bg-[#FAF8F2] shadow-2xl flex flex-col border-l border-[#E8EFE5]">
+          
           {/* Header */}
-          <div className="p-5 sm:p-6 bg-petou-cream border-b border-petou-green/10 flex items-center justify-between shrink-0">
+          <div className="p-5 sm:p-6 bg-[#FFFFFF] border-b border-[#E8EFE5] flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-petou-green text-petou-white flex items-center justify-center shadow-sm">
-                <ShoppingBag className="w-5 h-5 text-petou-yellow" />
+              <div className="w-10 h-10 rounded-2xl bg-[#174C3C] text-[#FAF8F2] flex items-center justify-center shadow-sm">
+                <ShoppingBag className="w-5 h-5 text-[#F47C49]" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-petou-green">Seu Carrinho Petou</h2>
-                <p className="text-xs text-petou-green/75">
-                  {totalCount} {totalCount === 1 ? "produto selecionado" : "produtos selecionados"}
+                <h2 id="cart-drawer-heading" className="text-lg font-black text-[#174C3C]">
+                  Seu Carrinho PETOU
+                </h2>
+                <p className="text-xs text-[#66716A]">
+                  {totalCount} {totalCount === 1 ? "item selecionado" : "itens selecionados"}
                 </p>
               </div>
             </div>
 
             <button
+              type="button"
               onClick={closeCart}
-              className="p-2 rounded-xl text-petou-green hover:bg-petou-green/10 transition"
-              aria-label="Fechar carrinho"
+              className="p-2.5 rounded-xl text-[#202C27] hover:bg-[#E8EFE5] transition min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+              aria-label="Fechar carrinho de compras (Esc)"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
 
-          {/* Mandatory notice banner: No online payment before stock confirmation */}
-          <div className="px-5 py-3 bg-amber-50 border-b border-amber-200/70 flex items-start gap-2.5 text-xs text-amber-900 shrink-0">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          {/* Mandatory notice banner */}
+          <div className="px-5 py-3 bg-[#E8EFE5] border-b border-[#78916D]/20 flex items-start gap-2.5 text-xs text-[#174C3C] shrink-0">
+            <AlertCircle className="w-4 h-4 text-[#F47C49] shrink-0 mt-0.5" aria-hidden="true" />
             <p className="leading-snug">
               <strong>Importante:</strong> Nenhum pagamento é realizado online antes da confirmação do estoque pela equipe no atendimento via WhatsApp.
             </p>
@@ -201,175 +246,190 @@ export default function CartDrawer() {
 
           {/* Scrollable Container */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-
+            
             {/* Items List */}
             {items.length === 0 ? (
-              <div className="py-12 flex flex-col items-center justify-center text-center text-petou-green/60 space-y-3">
-                <div className="w-16 h-16 rounded-full bg-petou-cream flex items-center justify-center">
-                  <ShoppingBag className="w-8 h-8 text-petou-green/40" />
+              <div className="py-12 flex flex-col items-center justify-center text-center text-[#66716A] space-y-3">
+                <div className="w-16 h-16 rounded-full bg-[#E8EFE5] flex items-center justify-center text-3xl" aria-hidden="true">
+                  🐾
                 </div>
-                <h3 className="text-base font-bold text-petou-green">Carrinho Vazio</h3>
-                <p className="text-xs text-petou-green/70 max-w-xs">
-                  Adicione rações, petiscos e brinquedos para montar o pedido do seu pet!
+                <h3 className="text-base font-bold text-[#174C3C]">Seu carrinho está vazio</h3>
+                <p className="text-xs text-[#66716A] max-w-xs leading-relaxed">
+                  Explore nossas rações, petiscos e itens de higiene para montar o pedido do seu pet!
                 </p>
                 <button
+                  type="button"
                   onClick={closeCart}
-                  className="mt-3 px-5 py-2.5 rounded-xl bg-petou-green text-petou-white font-bold text-xs hover:opacity-90 transition"
+                  className="mt-3 px-6 py-3 rounded-full bg-[#174C3C] text-[#FFFFFF] font-bold text-xs hover:bg-[#174C3C]/90 transition shadow-sm min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
                 >
-                  Explorar Loja
+                  Explorar catálogo
                 </button>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center justify-between pb-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-petou-green/70">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#66716A]">
                     Itens no Carrinho
                   </span>
                   <button
-                    onClick={clearCart}
-                    className="text-[11px] text-red-500 hover:underline font-semibold"
+                    type="button"
+                    onClick={() => {
+                      clearCart();
+                      setLiveMessage("O carrinho foi esvaziado.");
+                    }}
+                    className="text-[11px] text-[#F47C49] hover:underline font-bold p-1 rounded focus-visible:outline-2 focus-visible:outline-[#174C3C]"
                   >
                     Esvaziar carrinho
                   </button>
                 </div>
 
-                {items.map((item) => {
-                  const lineTotal = item.product.price * item.quantity;
-                  return (
-                    <div
-                      key={item.product.id}
-                      className="p-3.5 rounded-2xl bg-petou-cream/40 border border-petou-green/10 flex items-center gap-3.5"
-                    >
-                      {/* Item Visual */}
-                      <div className="w-12 h-12 rounded-xl bg-petou-white border border-petou-green/10 flex items-center justify-center text-2xl shrink-0">
-                        {item.product.iconName === "dog-bowl" && "🍲"}
-                        {item.product.iconName === "cat-bowl" && "🐟"}
-                        {item.product.iconName === "bone" && "🦴"}
-                        {item.product.iconName === "toy" && "🎾"}
-                        {item.product.iconName === "shampoo" && "🧴"}
-                        {item.product.iconName === "collar" && "🦮"}
-                      </div>
-
-                      {/* Item Info */}
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-petou-green/60 bg-petou-white px-1.5 py-0.5 rounded border border-petou-green/10">
-                          {item.product.brand} • {item.product.size}
-                        </span>
-                        <h4 className="text-xs sm:text-sm font-bold text-petou-green truncate mt-0.5">
-                          {item.product.name}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] text-petou-green/70">
-                            R$ {item.product.price.toFixed(2).replace(".", ",")} un.
-                          </span>
-                          <span className="text-[11px] font-extrabold text-petou-green">
-                            Total: R$ {lineTotal.toFixed(2).replace(".", ",")}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Controls */}
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex items-center bg-petou-white rounded-xl border border-petou-green/15 p-0.5">
-                          <button
-                            type="button"
-                            onClick={() => updateQuantity(item.product.id, -1)}
-                            className="w-6 h-6 flex items-center justify-center text-petou-green hover:bg-petou-green/10 rounded-lg transition"
-                            aria-label="Diminuir"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="w-6 text-center text-xs font-bold text-petou-green">
-                            {item.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => updateQuantity(item.product.id, 1)}
-                            className="w-6 h-6 flex items-center justify-center text-petou-green hover:bg-petou-green/10 rounded-lg transition"
-                            aria-label="Aumentar"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => removeFromCart(item.product.id)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition"
-                          aria-label="Remover"
+                <ul className="space-y-3" aria-label="Lista de produtos no carrinho">
+                  {items.map((item) => {
+                    const lineTotal = item.product.price * item.quantity;
+                    return (
+                      <li
+                        key={item.product.id}
+                        className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-[#E8EFE5] flex items-center gap-3.5 shadow-sm"
+                      >
+                        {/* Item Visual */}
+                        <div
+                          className="w-12 h-12 rounded-xl bg-[#FAF8F2] border border-[#E8EFE5] flex items-center justify-center text-2xl shrink-0"
+                          aria-hidden="true"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                          {item.product.iconName === "dog-bowl" && "🍲"}
+                          {item.product.iconName === "cat-bowl" && "🐟"}
+                          {item.product.iconName === "bone" && "🦴"}
+                          {item.product.iconName === "toy" && "🎾"}
+                          {item.product.iconName === "shampoo" && "🧴"}
+                          {item.product.iconName === "collar" && "🦮"}
+                        </div>
+
+                        {/* Item Info */}
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#78916D] bg-[#E8EFE5] px-1.5 py-0.5 rounded">
+                            {item.product.brand} • {item.product.size}
+                          </span>
+                          <h4 className="text-xs sm:text-sm font-bold text-[#174C3C] truncate mt-0.5">
+                            {item.product.name}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[11px] text-[#66716A]">
+                              R$ {item.product.price.toFixed(2).replace(".", ",")} un.
+                            </span>
+                            <span className="text-[11px] font-black text-[#174C3C]">
+                              R$ {lineTotal.toFixed(2).replace(".", ",")}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex items-center bg-[#FAF8F2] rounded-xl border border-[#E8EFE5] p-0.5">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateQty(item.product.id, item.product.name, -1)}
+                              className="w-8 h-8 flex items-center justify-center text-[#174C3C] hover:bg-[#E8EFE5] rounded-lg transition focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                              aria-label={`Diminuir quantidade de ${item.product.name}`}
+                            >
+                              <Minus className="w-3.5 h-3.5" aria-hidden="true" />
+                            </button>
+                            <span className="w-7 text-center text-xs font-bold text-[#174C3C]" aria-label={`Quantidade atual: ${item.quantity}`}>
+                              {item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateQty(item.product.id, item.product.name, 1)}
+                              className="w-8 h-8 flex items-center justify-center text-[#174C3C] hover:bg-[#E8EFE5] rounded-lg transition focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                              aria-label={`Aumentar quantidade de ${item.product.name}`}
+                            >
+                              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                            </button>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemove(item.product.id, item.product.name)}
+                            className="p-2 text-[#F47C49] hover:bg-[#F47C49]/10 rounded-lg transition min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                            aria-label={`Remover ${item.product.name} do carrinho`}
+                          >
+                            <Trash2 className="w-4 h-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             )}
 
             {/* Delivery & Payment Form */}
             {items.length > 0 && (
-              <form onSubmit={handleCheckout} id="checkout-form" className="space-y-5 pt-2">
-
+              <form onSubmit={handleCheckout} id="checkout-form" className="space-y-4 pt-2">
+                
                 {/* Section 1: Customer & Address */}
-                <div className="space-y-3.5 p-4 rounded-2xl bg-petou-cream/30 border border-petou-green/10">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-petou-green">
-                    <MapPin className="w-4 h-4 text-petou-yellow" />
+                <div className="space-y-3 p-4 rounded-2xl bg-[#FFFFFF] border border-[#E8EFE5] shadow-sm">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#174C3C]">
+                    <MapPin className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
                     <span>Dados de Entrega em Barcarena</span>
                   </div>
 
                   {/* Full Name */}
                   <div>
-                    <label className="block text-xs font-bold text-petou-green mb-1">
-                      Nome completo <span className="text-red-500">*</span>
+                    <label htmlFor="checkout-full-name" className="block text-xs font-bold text-[#202C27] mb-1">
+                      Nome completo <span className="text-[#F47C49]" aria-hidden="true">*</span>
                     </label>
                     <input
+                      id="checkout-full-name"
                       type="text"
                       required
+                      autoComplete="name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Ex: Maria dos Santos"
-                      className="w-full bg-petou-white text-petou-green placeholder-petou-green/45 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-petou-green/20 focus:outline-none focus:ring-2 focus:ring-petou-yellow"
+                      className="w-full bg-[#FAF8F2] text-[#202C27] placeholder-[#66716A]/75 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-[#E8EFE5] focus-visible:outline-2 focus-visible:outline-[#174C3C] min-h-[44px]"
                     />
                   </div>
 
                   {/* Street Address */}
                   <div>
-                    <label className="block text-xs font-bold text-petou-green mb-1">
-                      Endereço e número <span className="text-red-500">*</span>
+                    <label htmlFor="checkout-street-address" className="block text-xs font-bold text-[#202C27] mb-1">
+                      Endereço e número <span className="text-[#F47C49]" aria-hidden="true">*</span>
                     </label>
                     <input
+                      id="checkout-street-address"
                       type="text"
                       required
+                      autoComplete="street-address"
                       value={streetAddress}
                       onChange={(e) => setStreetAddress(e.target.value)}
                       placeholder="Ex: Av. Cônego Jerônimo Pimentel, 450 - próx. à praça"
-                      className="w-full bg-petou-white text-petou-green placeholder-petou-green/45 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-petou-green/20 focus:outline-none focus:ring-2 focus:ring-petou-yellow"
+                      className="w-full bg-[#FAF8F2] text-[#202C27] placeholder-[#66716A]/75 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-[#E8EFE5] focus-visible:outline-2 focus-visible:outline-[#174C3C] min-h-[44px]"
                     />
                   </div>
 
                   {/* Neighborhood Select */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-bold text-petou-green">
-                        Bairro em Barcarena <span className="text-red-500">*</span>
+                      <label htmlFor="checkout-neighborhood" className="text-xs font-bold text-[#202C27]">
+                        Bairro em Barcarena <span className="text-[#F47C49]" aria-hidden="true">*</span>
                       </label>
-                      <span className="text-[11px] text-petou-green/70">
+                      <span className="text-[11px] text-[#66716A]">
                         {deliveryFee !== null ? (
-                          <span className="text-petou-green font-semibold">
+                          <span className="text-[#174C3C] font-semibold">
                             Taxa: R$ {deliveryFee.toFixed(2).replace(".", ",")}
                           </span>
                         ) : (
-                          <span className="text-amber-700 font-semibold">
+                          <span className="text-[#F47C49] font-semibold">
                             Taxa a confirmar
                           </span>
                         )}
                       </span>
                     </div>
                     <select
+                      id="checkout-neighborhood"
                       value={neighborhoodId}
                       onChange={(e) => setNeighborhoodId(e.target.value)}
-                      className="w-full bg-petou-white text-petou-green text-xs sm:text-sm px-3 py-2.5 rounded-xl border border-petou-green/20 focus:outline-none focus:ring-2 focus:ring-petou-yellow"
+                      className="w-full bg-[#FAF8F2] text-[#202C27] text-xs sm:text-sm px-3 py-2.5 rounded-xl border border-[#E8EFE5] focus-visible:outline-2 focus-visible:outline-[#174C3C] min-h-[44px]"
                     >
                       {neighborhoods.map((n) => (
                         <option key={n.id} value={n.id}>
@@ -384,19 +444,20 @@ export default function CartDrawer() {
                 </div>
 
                 {/* Section 2: Payment Method */}
-                <div className="space-y-3 p-4 rounded-2xl bg-petou-cream/30 border border-petou-green/10">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-petou-green">
-                    <CreditCard className="w-4 h-4 text-petou-yellow" />
+                <fieldset className="space-y-3 p-4 rounded-2xl bg-[#FFFFFF] border border-[#E8EFE5] shadow-sm">
+                  <legend className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#174C3C] px-1">
+                    <CreditCard className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
                     <span>Forma de Pagamento (na confirmação / entrega)</span>
-                  </div>
+                  </legend>
 
                   <div className="grid grid-cols-3 gap-2">
                     {/* Pix */}
                     <label
-                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition ${paymentMethod === "Pix"
-                        ? "bg-petou-green text-petou-white border-petou-green shadow-sm"
-                        : "bg-petou-white text-petou-green border-petou-green/20 hover:border-petou-green/40"
-                        }`}
+                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${
+                        paymentMethod === "Pix"
+                          ? "bg-[#174C3C] text-[#FFFFFF] border-[#174C3C] shadow-sm"
+                          : "bg-[#FAF8F2] text-[#202C27] border-[#E8EFE5] hover:border-[#78916D]"
+                      }`}
                     >
                       <input
                         type="radio"
@@ -406,16 +467,17 @@ export default function CartDrawer() {
                         onChange={() => setPaymentMethod("Pix")}
                         className="sr-only"
                       />
-                      <QrCode className="w-5 h-5" />
+                      <QrCode className="w-5 h-5" aria-hidden="true" />
                       <span className="text-xs font-bold">Pix</span>
                     </label>
 
                     {/* Dinheiro */}
                     <label
-                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition ${paymentMethod === "Dinheiro"
-                        ? "bg-petou-green text-petou-white border-petou-green shadow-sm"
-                        : "bg-petou-white text-petou-green border-petou-green/20 hover:border-petou-green/40"
-                        }`}
+                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${
+                        paymentMethod === "Dinheiro"
+                          ? "bg-[#174C3C] text-[#FFFFFF] border-[#174C3C] shadow-sm"
+                          : "bg-[#FAF8F2] text-[#202C27] border-[#E8EFE5] hover:border-[#78916D]"
+                      }`}
                     >
                       <input
                         type="radio"
@@ -425,16 +487,17 @@ export default function CartDrawer() {
                         onChange={() => setPaymentMethod("Dinheiro")}
                         className="sr-only"
                       />
-                      <Banknote className="w-5 h-5" />
+                      <Banknote className="w-5 h-5" aria-hidden="true" />
                       <span className="text-xs font-bold">Dinheiro</span>
                     </label>
 
                     {/* Cartão */}
                     <label
-                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition ${paymentMethod === "Cartão"
-                        ? "bg-petou-green text-petou-white border-petou-green shadow-sm"
-                        : "bg-petou-white text-petou-green border-petou-green/20 hover:border-petou-green/40"
-                        }`}
+                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${
+                        paymentMethod === "Cartão"
+                          ? "bg-[#174C3C] text-[#FFFFFF] border-[#174C3C] shadow-sm"
+                          : "bg-[#FAF8F2] text-[#202C27] border-[#E8EFE5] hover:border-[#78916D]"
+                      }`}
                     >
                       <input
                         type="radio"
@@ -444,7 +507,7 @@ export default function CartDrawer() {
                         onChange={() => setPaymentMethod("Cartão")}
                         className="sr-only"
                       />
-                      <CreditCard className="w-5 h-5" />
+                      <CreditCard className="w-5 h-5" aria-hidden="true" />
                       <span className="text-xs font-bold">Cartão</span>
                     </label>
                   </div>
@@ -452,30 +515,35 @@ export default function CartDrawer() {
                   {/* Cash Change field if Dinheiro is selected */}
                   {paymentMethod === "Dinheiro" && (
                     <div className="pt-2">
-                      <label className="block text-xs font-bold text-petou-green mb-1">
+                      <label htmlFor="checkout-cash-change" className="block text-xs font-bold text-[#202C27] mb-1">
                         Precisa de troco para quanto? (opcional)
                       </label>
                       <input
+                        id="checkout-cash-change"
                         type="text"
                         value={cashChange}
                         onChange={(e) => setCashChange(e.target.value)}
                         placeholder="Ex: Troco para R$ 100,00 ou Não preciso"
-                        className="w-full bg-petou-white text-petou-green placeholder-petou-green/45 text-xs px-3 py-2 rounded-xl border border-petou-green/20 focus:outline-none focus:ring-2 focus:ring-petou-yellow"
+                        className="w-full bg-[#FAF8F2] text-[#202C27] placeholder-[#66716A]/75 text-xs px-3 py-2.5 rounded-xl border border-[#E8EFE5] focus-visible:outline-2 focus-visible:outline-[#174C3C] min-h-[44px]"
                       />
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 pt-1 text-[11px] text-petou-green/70">
-                    <ShieldCheck className="w-3.5 h-3.5 text-petou-yellow shrink-0" />
-                    <span>Pagamento efetuado via Pix na confirmação ou maquineta/dinheiro na entrega.</span>
+                  <div className="flex items-center gap-2 pt-1 text-[11px] text-[#66716A]">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#78916D] shrink-0" aria-hidden="true" />
+                    <span>Pagamento via Pix na confirmação ou maquineta/dinheiro na entrega.</span>
                   </div>
-                </div>
+                </fieldset>
 
-                {/* Validation Error Banner */}
+                {/* Validation Error Banner with role="alert" */}
                 {errorMessage && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{errorMessage}</span>
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2"
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-600" aria-hidden="true" />
+                    <span className="font-semibold">{errorMessage}</span>
                   </div>
                 )}
               </form>
@@ -485,39 +553,39 @@ export default function CartDrawer() {
 
           {/* Sticky Drawer Footer with Totals and Submit */}
           {items.length > 0 && (
-            <div className="p-5 sm:p-6 bg-petou-cream border-t border-petou-green/10 shrink-0 space-y-3.5">
-
+            <div className="p-5 sm:p-6 bg-[#FFFFFF] border-t border-[#E8EFE5] shrink-0 space-y-3.5">
+              
               {/* Financial Breakdown */}
-              <div className="space-y-1.5 text-xs text-petou-green">
+              <div className="space-y-1.5 text-xs text-[#202C27]">
                 <div className="flex justify-between">
-                  <span className="text-petou-green/75">Subtotal dos produtos</span>
+                  <span className="text-[#66716A]">Subtotal dos produtos</span>
                   <span className="font-bold">
                     R$ {subtotal.toFixed(2).replace(".", ",")}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-petou-green/75 flex items-center gap-1">
-                    <Truck className="w-3.5 h-3.5 text-petou-yellow" />
+                  <span className="text-[#66716A] flex items-center gap-1">
+                    <Truck className="w-3.5 h-3.5 text-[#F47C49]" aria-hidden="true" />
                     Taxa ({selectedNeighborhood.name})
                   </span>
                   <span className="font-bold">
                     {deliveryFee !== null ? (
                       `R$ ${deliveryFee.toFixed(2).replace(".", ",")}`
                     ) : (
-                      <span className="text-amber-800 text-[11px] italic">A confirmar</span>
+                      <span className="text-[#F47C49] text-[11px] italic">A confirmar</span>
                     )}
                   </span>
                 </div>
 
-                <div className="pt-2 border-t border-petou-green/10 flex justify-between items-baseline">
-                  <span className="text-sm font-bold text-petou-green">Total Estimado</span>
+                <div className="pt-2 border-t border-[#E8EFE5] flex justify-between items-baseline">
+                  <span className="text-sm font-bold text-[#174C3C]">Total Estimado</span>
                   <div className="text-right">
-                    <span className="text-xl font-black text-petou-green">
+                    <span className="text-xl font-black text-[#174C3C]">
                       R$ {total.toFixed(2).replace(".", ",")}
                     </span>
                     {deliveryFee === null && (
-                      <span className="block text-[10px] text-amber-800 italic">
+                      <span className="block text-[10px] text-[#F47C49] italic">
                         + entrega a confirmar
                       </span>
                     )}
@@ -529,14 +597,14 @@ export default function CartDrawer() {
               <button
                 type="submit"
                 form="checkout-form"
-                className="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-2xl bg-petou-green text-petou-white font-black text-sm hover:bg-petou-green/90 transition shadow-lg shadow-petou-green/20"
+                className="w-full inline-flex items-center justify-center gap-2.5 py-4 px-6 rounded-full bg-[#174C3C] text-[#FFFFFF] font-bold text-sm hover:bg-[#174C3C]/90 active:scale-95 transition-all shadow-lg shadow-[#174C3C]/20 min-h-[48px] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
               >
-                <MessageCircle className="w-5 h-5 text-petou-yellow" />
+                <MessageCircle className="w-5 h-5 text-[#F47C49]" aria-hidden="true" />
                 <span>Enviar pedido pelo WhatsApp</span>
               </button>
 
-              <p className="text-[10px] text-center text-petou-green/70">
-                Ao clicar, o WhatsApp abrirá com o resumo detalhado pronto para envio.
+              <p className="text-[10px] text-center text-[#66716A]">
+                Ao clicar, o WhatsApp abrirá com o pedido formatado sem perder os itens do carrinho.
               </p>
             </div>
           )}

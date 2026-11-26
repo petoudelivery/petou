@@ -3,6 +3,35 @@ import { DEMO_PRODUCTS, CATEGORIES } from "@/data/products";
 import { BARCARENA_NEIGHBORHOODS } from "@/data/neighborhoods";
 import { Product, Neighborhood } from "@/types/store";
 
+export const CATEGORY_SLUG_MAP: Record<string, string> = {
+  caes: "Rações para cães",
+  gatos: "Rações para gatos",
+  alimentacao: "Petiscos",
+  higiene: "Higiene",
+  acessorios: "Acessórios",
+};
+
+export function slugToCategoryName(slug: string): string {
+  const normalized = decodeURIComponent(slug).toLowerCase().trim();
+  if (CATEGORY_SLUG_MAP[normalized]) {
+    return CATEGORY_SLUG_MAP[normalized];
+  }
+  // Try matching directly
+  const found = CATEGORIES.find(
+    (c) => c.toLowerCase().replace(/\s+/g, "-") === normalized
+  );
+  return found || decodeURIComponent(slug);
+}
+
+export function categoryNameToSlug(name: string): string {
+  for (const [slug, catName] of Object.entries(CATEGORY_SLUG_MAP)) {
+    if (catName.toLowerCase() === name.toLowerCase()) {
+      return slug;
+    }
+  }
+  return name.toLowerCase().replace(/\s+/g, "-");
+}
+
 export async function fetchProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured || !supabase) {
     return DEMO_PRODUCTS;
@@ -35,6 +64,52 @@ export async function fetchProducts(): Promise<Product[]> {
     console.error("Erro ao carregar produtos do Supabase:", err);
     return DEMO_PRODUCTS;
   }
+}
+
+export async function fetchProductById(id: string): Promise<Product | null> {
+  const allProducts = await fetchProducts();
+  const found = allProducts.find((p) => p.id === id);
+  if (found) return found;
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (data && !error) {
+        return {
+          id: String(data.id),
+          name: data.name || "Produto",
+          brand: data.brand || "PETOU",
+          size: data.size || "1 un",
+          price: Number(data.price) || 0,
+          formattedPrice: `R$ ${Number(data.price || 0).toFixed(2).replace(".", ",")}`,
+          category: data.category || "Rações para cães",
+          isDemo: Boolean(data.is_demo),
+          badge: data.badge || undefined,
+          description: data.description || "",
+          iconName: data.icon_name || "dog-bowl",
+        };
+      }
+    } catch (e) {
+      console.error("Erro ao buscar produto por ID:", e);
+    }
+  }
+
+  return null;
+}
+
+export async function fetchProductsByCategory(categoryNameOrSlug: string): Promise<Product[]> {
+  const categoryName = slugToCategoryName(categoryNameOrSlug);
+  const products = await fetchProducts();
+  return products.filter(
+    (p) =>
+      p.category.toLowerCase() === categoryName.toLowerCase() ||
+      categoryNameToSlug(p.category) === categoryNameOrSlug.toLowerCase()
+  );
 }
 
 export async function fetchCategories(): Promise<string[]> {

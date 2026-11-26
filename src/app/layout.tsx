@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
+import { Manrope, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import CartDrawer from "@/components/CartDrawer";
 
-const nunito = Nunito({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-nunito",
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
   display: "swap",
 });
 
@@ -14,9 +20,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://petou.com.br"
   ),
-  title: "PETOU – Tudo para seu pet, na sua porta! | Delivery em Barcarena",
+  title: "PETOU – Tudo para cuidar melhor de quem faz parte da família | Barcarena",
   description:
-    "Pet shop online oficial em Barcarena - PA. Rações premium para cães e gatos, petiscos naturais, brinquedos, higiene e acessórios com entrega ágil na sua porta e confirmação via WhatsApp.",
+    "Encontre alimentação, higiene e acessórios com atendimento próximo e entrega em Barcarena. Rações premium para cães e gatos, petiscos e cuidados com confirmação via WhatsApp.",
   keywords: [
     "pet shop barcarena",
     "ração barcarena",
@@ -36,9 +42,9 @@ export const metadata: Metadata = {
     address: true,
   },
   openGraph: {
-    title: "PETOU – Tudo para seu pet, na sua porta! | Delivery em Barcarena",
+    title: "PETOU – Tudo para cuidar melhor de quem faz parte da família",
     description:
-      "Alimentos balanceados, petiscos e cuidados para seu melhor amigo em Barcarena e região. Atendimento direto e confirmação via WhatsApp.",
+      "Alimentação, higiene e acessórios com atendimento próximo e entrega em Barcarena. Pedidos confirmados via WhatsApp.",
     siteName: "PETOU Store",
     locale: "pt_BR",
     type: "website",
@@ -53,9 +59,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PETOU – Tudo para seu pet, na sua porta! | Delivery em Barcarena",
+    title: "PETOU – Tudo para seu pet em Barcarena",
     description:
-      "Pet shop online com delivery em Barcarena e região. Rações, petiscos e acessórios para seu pet.",
+      "Pet shop online com entrega em Barcarena e região. Rações, higiene e acessórios para seu pet.",
     images: ["/petou-logo.png"],
   },
   icons: {
@@ -70,8 +76,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${nunito.variable} font-sans`}>
-      <body className="min-h-screen flex flex-col font-sans antialiased">
+    <html lang="pt-BR" className={`${manrope.variable} ${dmSans.variable} font-sans`}>
+      <body className="min-h-screen flex flex-col font-sans bg-[#FAF8F2] text-[#202C27] antialiased overflow-x-hidden">
         <CartProvider>
           {children}
           <CartDrawer />
