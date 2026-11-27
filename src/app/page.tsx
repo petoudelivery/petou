@@ -255,140 +255,201 @@ export default function Home() {
 
         {/* =========================================================================
             5. CATEGORIES GRID
+            Redesigned Category Section:
+            - 4 clean, premium category cards with realistic pet photography
+            - Categories: Food & Nutrition, Hygiene & Care, Toys, Accessories
+            - Official PETOU palette: #08422E, #FAB31F, #FDF9F1, #FFFFFF
            ========================================================================= */}
-        <section id="categorias" aria-labelledby="categories-heading" className="py-16 sm:py-20 bg-[#FAF8F2]">
+        <section id="categorias" aria-labelledby="categories-heading" className="py-16 sm:py-20 bg-[#FDF9F1] border-b border-[#08422E]/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <div className="text-center sm:text-left mb-10">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#78916D]">
-                Categorias Principais
-              </span>
-              <h2 id="categories-heading" className="text-3xl sm:text-4xl font-black text-[#174C3C] tracking-tight mt-1">
+            <div className="text-center sm:text-left mb-10 sm:mb-12">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#08422E]/5 border border-[#08422E]/10 text-[#08422E] text-xs font-bold tracking-wide mb-3">
+                <span className="w-2 h-2 rounded-full bg-[#FAB31F]" aria-hidden="true" />
+                <span>Categorias Selecionadas</span>
+              </div>
+              <h2 id="categories-heading" className="text-3xl sm:text-4xl font-black text-[#08422E] tracking-tight">
                 Encontre o que seu pet precisa
               </h2>
-              <p className="text-sm text-[#66716A] mt-1.5 max-w-xl">
-                Navegue pelas principais categorias para encontrar a nutrição e o cuidado ideal.
+              <p className="text-sm sm:text-base text-[#202C27]/75 mt-2 max-w-xl">
+                Navegue pelas principais categorias para encontrar alimentação de qualidade, higiene e acessórios com entrega em Barcarena.
               </p>
             </div>
 
-            {/* 4 Large Split Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 4 Clean Premium Category Cards with Realistic Photography */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               
-              {/* Card 1: Cães */}
-              <Link
-                href="/categoria/caes"
-                aria-label="Ver categoria Cães: Rações selecionadas, brinquedos e acessórios"
-                className="group rounded-3xl bg-[#FFFFFF] border border-[#E8EFE5] hover:border-[#78916D]/40 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col sm:flex-row h-auto sm:h-56 focus-visible:outline-2 focus-visible:outline-[#174C3C]"
-              >
-                <div className="sm:w-1/2 bg-gradient-to-tr from-[#E8EFE5] to-[#FAF8F2] flex flex-col items-center justify-center p-6 relative">
-                  <span className="text-6xl group-hover:scale-110 transition duration-300 select-none" aria-hidden="true">
-                    🐕
-                  </span>
-                  <span className="text-xs font-bold text-[#174C3C] mt-2">Mundo Canino</span>
-                </div>
-                <div className="sm:w-1/2 bg-[#174C3C] p-6 text-[#FFFFFF] flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#F47C49]">
-                      Categoria
-                    </span>
-                    <h3 className="text-2xl font-black text-[#FFFFFF] mt-1">Cães</h3>
-                    <p className="text-xs text-[#FAF8F2]/80 mt-1 leading-relaxed">
-                      Rações selecionadas, brinquedos e acessórios para todas as fases.
-                    </p>
-                  </div>
-                  <div className="flex justify-end pt-3">
-                    <span className="w-10 h-10 rounded-full bg-[#FFFFFF] text-[#174C3C] flex items-center justify-center group-hover:scale-110 group-hover:bg-[#F47C49] group-hover:text-[#FFFFFF] transition duration-200 shadow-md" aria-hidden="true">
-                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Card 2: Gatos */}
-              <Link
-                href="/categoria/gatos"
-                aria-label="Ver categoria Gatos: Alimentação saborosa, controle de bolas de pelo e bem-estar"
-                className="group rounded-3xl bg-[#FFFFFF] border border-[#E8EFE5] hover:border-[#78916D]/40 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col sm:flex-row h-auto sm:h-56 focus-visible:outline-2 focus-visible:outline-[#174C3C]"
-              >
-                <div className="sm:w-1/2 bg-gradient-to-tr from-[#E8EFE5] to-[#FAF8F2] flex flex-col items-center justify-center p-6 relative">
-                  <span className="text-6xl group-hover:scale-110 transition duration-300 select-none" aria-hidden="true">
-                    🐈
-                  </span>
-                  <span className="text-xs font-bold text-[#174C3C] mt-2">Mundo Felino</span>
-                </div>
-                <div className="sm:w-1/2 bg-[#174C3C] p-6 text-[#FFFFFF] flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#F47C49]">
-                      Categoria
-                    </span>
-                    <h3 className="text-2xl font-black text-[#FFFFFF] mt-1">Gatos</h3>
-                    <p className="text-xs text-[#FAF8F2]/80 mt-1 leading-relaxed">
-                      Alimentação saborosa, controle de bolas de pelo e bem-estar felino.
-                    </p>
-                  </div>
-                  <div className="flex justify-end pt-3">
-                    <span className="w-10 h-10 rounded-full bg-[#FFFFFF] text-[#174C3C] flex items-center justify-center group-hover:scale-110 group-hover:bg-[#F47C49] group-hover:text-[#FFFFFF] transition duration-200 shadow-md" aria-hidden="true">
-                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Card 3: Alimentação */}
+              {/* Card 1: Food & Nutrition */}
               <Link
                 href="/categoria/alimentacao"
-                aria-label="Ver categoria Alimentação: Rações premium balanceadas e petiscos naturais"
-                className="group rounded-3xl bg-[#FFFFFF] border border-[#E8EFE5] hover:border-[#78916D]/40 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col sm:flex-row h-auto sm:h-56 focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                aria-label="Ver categoria Alimentação & Nutrição: Rações balanceadas e petiscos naturais"
+                className="group rounded-3xl bg-[#FFFFFF] border border-[#08422E]/10 hover:border-[#08422E]/30 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#08422E]"
               >
-                <div className="sm:w-1/2 bg-gradient-to-tr from-[#E8EFE5] to-[#FAF8F2] flex flex-col items-center justify-center p-6 relative">
-                  <span className="text-6xl group-hover:scale-110 transition duration-300 select-none" aria-hidden="true">
-                    🥣
+                <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-[#FDF9F1]">
+                  <Image
+                    src="/category-food.jpg"
+                    alt="Alimentação & Nutrição para cães e gatos"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <span className="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-[#FFFFFF]/95 backdrop-blur-md text-[#08422E] text-[11px] font-bold shadow-sm flex items-center gap-1.5 border border-[#08422E]/5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FAB31F]" aria-hidden="true" />
+                    <span>Food & Nutrition</span>
                   </span>
-                  <span className="text-xs font-bold text-[#174C3C] mt-2">Nutrição Pet</span>
                 </div>
-                <div className="sm:w-1/2 bg-[#174C3C] p-6 text-[#FFFFFF] flex flex-col justify-between">
+
+                <div className="p-6 flex flex-col justify-between flex-1">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#F47C49]">
-                      Categoria
-                    </span>
-                    <h3 className="text-2xl font-black text-[#FFFFFF] mt-1">Alimentação</h3>
-                    <p className="text-xs text-[#FAF8F2]/80 mt-1 leading-relaxed">
-                      Rações premium balanceadas e petiscos naturais para recompensa.
+                    <h3 className="text-xl font-black text-[#08422E] tracking-tight group-hover:text-[#08422E]">
+                      Alimentação & Nutrição
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#202C27]/75 mt-2 leading-relaxed">
+                      Rações premium balanceadas, alimentos úmidos e petiscos naturais para todas as idades.
                     </p>
                   </div>
-                  <div className="flex justify-end pt-3">
-                    <span className="w-10 h-10 rounded-full bg-[#FFFFFF] text-[#174C3C] flex items-center justify-center group-hover:scale-110 group-hover:bg-[#F47C49] group-hover:text-[#FFFFFF] transition duration-200 shadow-md" aria-hidden="true">
-                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+
+                  <div className="pt-4 mt-4 border-t border-[#08422E]/10 flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#08422E] group-hover:underline">
+                      Explorar categoria
+                    </span>
+                    <span
+                      className="w-9 h-9 rounded-full bg-[#FDF9F1] group-hover:bg-[#08422E] text-[#08422E] group-hover:text-[#FFFFFF] border border-[#08422E]/10 flex items-center justify-center transition-all duration-300 shadow-sm"
+                      aria-hidden="true"
+                    >
+                      <ArrowRight className="w-4 h-4 text-[#FAB31F] group-hover:text-[#FAB31F] stroke-[2.5]" />
                     </span>
                   </div>
                 </div>
               </Link>
 
-              {/* Card 4: Higiene e cuidados */}
+              {/* Card 2: Hygiene & Care */}
               <Link
                 href="/categoria/higiene"
-                aria-label="Ver categoria Higiene e cuidados: Shampoos suaves, escovação e bem-estar"
-                className="group rounded-3xl bg-[#FFFFFF] border border-[#E8EFE5] hover:border-[#78916D]/40 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col sm:flex-row h-auto sm:h-56 focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                aria-label="Ver categoria Higiene & Cuidados: Shampoos suaves, escovação e bem-estar"
+                className="group rounded-3xl bg-[#FFFFFF] border border-[#08422E]/10 hover:border-[#08422E]/30 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#08422E]"
               >
-                <div className="sm:w-1/2 bg-gradient-to-tr from-[#E8EFE5] to-[#FAF8F2] flex flex-col items-center justify-center p-6 relative">
-                  <span className="text-6xl group-hover:scale-110 transition duration-300 select-none" aria-hidden="true">
-                    🧴
+                <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-[#FDF9F1]">
+                  <Image
+                    src="/category-hygiene.jpg"
+                    alt="Higiene & Cuidados para pets"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <span className="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-[#FFFFFF]/95 backdrop-blur-md text-[#08422E] text-[11px] font-bold shadow-sm flex items-center gap-1.5 border border-[#08422E]/5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FAB31F]" aria-hidden="true" />
+                    <span>Hygiene & Care</span>
                   </span>
-                  <span className="text-xs font-bold text-[#174C3C] mt-2">Saúde & Banho</span>
                 </div>
-                <div className="sm:w-1/2 bg-[#174C3C] p-6 text-[#FFFFFF] flex flex-col justify-between">
+
+                <div className="p-6 flex flex-col justify-between flex-1">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#F47C49]">
-                      Categoria
-                    </span>
-                    <h3 className="text-2xl font-black text-[#FFFFFF] mt-1">Higiene e cuidados</h3>
-                    <p className="text-xs text-[#FAF8F2]/80 mt-1 leading-relaxed">
-                      Shampoos suaves, escovação e produtos de cuidado diário com carinho.
+                    <h3 className="text-xl font-black text-[#08422E] tracking-tight group-hover:text-[#08422E]">
+                      Higiene & Cuidados
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#202C27]/75 mt-2 leading-relaxed">
+                      Shampoos suaves, toalhas, escovação e fórmulas seguras para o banho e saúde da pele.
                     </p>
                   </div>
-                  <div className="flex justify-end pt-3">
-                    <span className="w-10 h-10 rounded-full bg-[#FFFFFF] text-[#174C3C] flex items-center justify-center group-hover:scale-110 group-hover:bg-[#F47C49] group-hover:text-[#FFFFFF] transition duration-200 shadow-md" aria-hidden="true">
-                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+
+                  <div className="pt-4 mt-4 border-t border-[#08422E]/10 flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#08422E] group-hover:underline">
+                      Explorar categoria
+                    </span>
+                    <span
+                      className="w-9 h-9 rounded-full bg-[#FDF9F1] group-hover:bg-[#08422E] text-[#08422E] group-hover:text-[#FFFFFF] border border-[#08422E]/10 flex items-center justify-center transition-all duration-300 shadow-sm"
+                      aria-hidden="true"
+                    >
+                      <ArrowRight className="w-4 h-4 text-[#FAB31F] group-hover:text-[#FAB31F] stroke-[2.5]" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Card 3: Toys */}
+              <Link
+                href="/categoria/brinquedos"
+                aria-label="Ver categoria Brinquedos: Mordedores resistentes e brinquedos interativos"
+                className="group rounded-3xl bg-[#FFFFFF] border border-[#08422E]/10 hover:border-[#08422E]/30 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#08422E]"
+              >
+                <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-[#FDF9F1]">
+                  <Image
+                    src="/category-toys.jpg"
+                    alt="Brinquedos e mordedores para pets"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <span className="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-[#FFFFFF]/95 backdrop-blur-md text-[#08422E] text-[11px] font-bold shadow-sm flex items-center gap-1.5 border border-[#08422E]/5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FAB31F]" aria-hidden="true" />
+                    <span>Toys</span>
+                  </span>
+                </div>
+
+                <div className="p-6 flex flex-col justify-between flex-1">
+                  <div>
+                    <h3 className="text-xl font-black text-[#08422E] tracking-tight group-hover:text-[#08422E]">
+                      Brinquedos
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#202C27]/75 mt-2 leading-relaxed">
+                      Mordedores atóxicos, bolinhas e brinquedos interativos para momentos de gasto de energia e alegria.
+                    </p>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-[#08422E]/10 flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#08422E] group-hover:underline">
+                      Explorar categoria
+                    </span>
+                    <span
+                      className="w-9 h-9 rounded-full bg-[#FDF9F1] group-hover:bg-[#08422E] text-[#08422E] group-hover:text-[#FFFFFF] border border-[#08422E]/10 flex items-center justify-center transition-all duration-300 shadow-sm"
+                      aria-hidden="true"
+                    >
+                      <ArrowRight className="w-4 h-4 text-[#FAB31F] group-hover:text-[#FAB31F] stroke-[2.5]" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Card 4: Accessories */}
+              <Link
+                href="/categoria/acessorios"
+                aria-label="Ver categoria Acessórios: Coleiras confortáveis, guias e peitorais"
+                className="group rounded-3xl bg-[#FFFFFF] border border-[#08422E]/10 hover:border-[#08422E]/30 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#08422E]"
+              >
+                <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-[#FDF9F1]">
+                  <Image
+                    src="/category-accessories.jpg"
+                    alt="Acessórios, coleiras e guias para pets"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <span className="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-[#FFFFFF]/95 backdrop-blur-md text-[#08422E] text-[11px] font-bold shadow-sm flex items-center gap-1.5 border border-[#08422E]/5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FAB31F]" aria-hidden="true" />
+                    <span>Accessories</span>
+                  </span>
+                </div>
+
+                <div className="p-6 flex flex-col justify-between flex-1">
+                  <div>
+                    <h3 className="text-xl font-black text-[#08422E] tracking-tight group-hover:text-[#08422E]">
+                      Acessórios
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#202C27]/75 mt-2 leading-relaxed">
+                      Coleiras em couro e tecido, guias reforçadas, peitorais e itens de passeio com ergonomia e segurança.
+                    </p>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-[#08422E]/10 flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#08422E] group-hover:underline">
+                      Explorar categoria
+                    </span>
+                    <span
+                      className="w-9 h-9 rounded-full bg-[#FDF9F1] group-hover:bg-[#08422E] text-[#08422E] group-hover:text-[#FFFFFF] border border-[#08422E]/10 flex items-center justify-center transition-all duration-300 shadow-sm"
+                      aria-hidden="true"
+                    >
+                      <ArrowRight className="w-4 h-4 text-[#FAB31F] group-hover:text-[#FAB31F] stroke-[2.5]" />
                     </span>
                   </div>
                 </div>
