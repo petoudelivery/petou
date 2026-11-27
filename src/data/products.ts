@@ -15,7 +15,7 @@ export type Category = (typeof CATEGORIES)[number];
 export const DEMO_PRODUCTS: Product[] = [
   {
     id: "demo-1",
-    name: "Ração premium para cães",
+    name: "Ração para cães",
     brand: "Petou",
     size: "1 kg",
     price: 100.0,
@@ -28,7 +28,7 @@ export const DEMO_PRODUCTS: Product[] = [
   },
   {
     id: "demo-2",
-    name: "Ração premium para gatos",
+    name: "Ração para gatos",
     brand: "Petou",
     size: "1 kg",
     price: 90.0,
