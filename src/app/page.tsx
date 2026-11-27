@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,7 +16,6 @@ import {
   ArrowRight,
   MessageCircle,
   ShoppingBag,
-  Sparkles,
   Check,
 } from "lucide-react";
 
@@ -96,129 +96,116 @@ export default function Home() {
       <main className="flex-1">
         {/* =========================================================================
             3. HERO SECTION
-            Split layout on cream (#FAF8F2) with subtle paw watermarks on the left
-            and organic curved transition to editorial photo (Golden Retriever + tabby cat)
+            Photographic Split-Layout:
+            - Left: Warm cream background (#FDF9F1), ~50% width with typography and CTAs
+            - Right: Full-height editorial photograph of a Golden Retriever and tabby cat
+            - Subtle organic curved transition between text and image
            ========================================================================= */}
         <section
           aria-labelledby="hero-heading"
-          className="relative overflow-hidden bg-[#FAF8F2] pt-8 pb-16 lg:pt-14 lg:pb-24 border-b border-[#E8EFE5]"
+          className="relative bg-[#FDF9F1] border-b border-[#08422E]/10 overflow-hidden"
         >
-          {/* Subtle paw watermarks on the left background */}
-          <div aria-hidden="true" className="absolute top-12 left-6 pointer-events-none opacity-[0.06] select-none text-[#174C3C]">
-            <svg width="220" height="220" viewBox="0 0 100 100" fill="currentColor">
-              <ellipse cx="50" cy="62" rx="22" ry="17" />
-              <circle cx="26" cy="38" r="9" />
-              <circle cx="42" cy="27" r="9.5" />
-              <circle cx="58" cy="27" r="9.5" />
-              <circle cx="74" cy="38" r="9" />
-            </svg>
-          </div>
-          <div aria-hidden="true" className="absolute bottom-8 left-1/3 pointer-events-none opacity-[0.04] select-none text-[#78916D]">
-            <svg width="160" height="160" viewBox="0 0 100 100" fill="currentColor">
-              <ellipse cx="50" cy="62" rx="22" ry="17" />
-              <circle cx="26" cy="38" r="9" />
-              <circle cx="42" cy="27" r="9.5" />
-              <circle cx="58" cy="27" r="9.5" />
-              <circle cx="74" cy="38" r="9" />
-            </svg>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-              
-              {/* Left Column: Headline, subcopy, CTA buttons */}
-              <div className="lg:col-span-7 space-y-6 text-left">
-                {/* Badge Tag */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8EFE5] text-[#174C3C] text-xs font-bold tracking-wide">
-                  <span className="w-2 h-2 rounded-full bg-[#F47C49]" aria-hidden="true" />
-                  <span>Pet shop especializado em Barcarena • Atendimento humanizado</span>
+          <div className="flex flex-col lg:flex-row items-stretch min-h-[560px] lg:min-h-[620px] xl:min-h-[660px]">
+            
+            {/* Left side: ~50% width, warm cream background (#FDF9F1) */}
+            <div className="w-full lg:w-1/2 flex items-center bg-[#FDF9F1] px-5 sm:px-10 lg:px-12 xl:px-16 py-12 sm:py-16 lg:py-20 z-10">
+              <div className="max-w-xl mx-auto lg:mx-0 space-y-6 text-left">
+                
+                {/* Subtle reassurance badge with yellow accent */}
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#08422E]/5 border border-[#08422E]/10 text-[#08422E] text-xs font-bold tracking-wide">
+                  <span className="w-2 h-2 rounded-full bg-[#FAB31F]" aria-hidden="true" />
+                  <span>Pet shop em Barcarena • Atendimento humanizado</span>
                 </div>
 
-                {/* Main Headline (H1) */}
-                <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#174C3C] tracking-tight leading-[1.12]">
+                {/* Headline */}
+                <h1
+                  id="hero-heading"
+                  className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.75rem] font-black text-[#08422E] tracking-tight leading-[1.12]"
+                >
                   Tudo para cuidar melhor de quem faz parte da{" "}
-                  <span className="relative inline-block text-[#F47C49]">
+                  <span className="relative inline-block">
                     família.
-                    <span className="absolute -bottom-1 left-0 w-full h-3 bg-[#F47C49]/25 rounded-full -rotate-1 pointer-events-none" aria-hidden="true" />
+                    <span
+                      className="absolute -bottom-1.5 left-0 w-full h-3 bg-[#FAB31F]/35 rounded-full -rotate-1 pointer-events-none"
+                      aria-hidden="true"
+                    />
                   </span>
                 </h1>
 
-                {/* Subcopy */}
-                <p className="text-base sm:text-lg text-[#66716A] max-w-xl leading-relaxed">
+                {/* Description */}
+                <p className="text-base sm:text-lg text-[#202C27]/80 leading-relaxed max-w-lg">
                   Encontre alimentação, higiene e acessórios com atendimento próximo e entrega em Barcarena.
                 </p>
 
-                {/* CTA Group: Primary button (#174C3C) + Secondary link */}
+                {/* CTAs */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
                   <a
                     href="#produtos"
-                    className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-[#174C3C] text-[#FFFFFF] font-bold text-sm hover:bg-[#174C3C]/90 active:scale-95 transition-all shadow-lg shadow-[#174C3C]/20 text-center min-h-[48px] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                    className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-[#08422E] text-[#FFFFFF] font-bold text-sm hover:bg-[#08422E]/90 active:scale-95 transition-all shadow-lg shadow-[#08422E]/20 text-center min-h-[48px] focus-visible:outline-2 focus-visible:outline-[#08422E]"
                   >
                     <span>Explorar produtos</span>
-                    <ArrowRight className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
+                    <ArrowRight className="w-4 h-4 text-[#FAB31F]" aria-hidden="true" />
                   </a>
 
                   <a
                     href={whatsappInquiryUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full text-[#174C3C] hover:text-[#174C3C]/80 font-bold text-sm hover:bg-[#E8EFE5]/50 transition-all text-center min-h-[48px] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                    className="inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-full text-[#08422E] font-bold text-sm bg-[#FFFFFF] hover:bg-[#FFFFFF]/90 border border-[#08422E]/15 transition-all shadow-sm text-center min-h-[48px] focus-visible:outline-2 focus-visible:outline-[#08422E]"
                   >
                     <span>Fale com a nossa equipe</span>
-                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                    <ArrowRight className="w-4 h-4 text-[#08422E]" aria-hidden="true" />
                   </a>
                 </div>
+
+              </div>
+            </div>
+
+            {/* Right side: ~50% width, full-height photograph of Golden Retriever & tabby cat */}
+            <div className="w-full lg:w-1/2 relative min-h-[360px] sm:min-h-[440px] lg:min-h-[620px] xl:min-h-[660px] bg-[#FDF9F1] overflow-hidden flex items-stretch">
+              
+              {/* Subtle organic curved transition (Desktop: left edge) */}
+              <div
+                className="hidden lg:block absolute inset-y-0 -left-1 w-16 xl:w-24 z-10 pointer-events-none"
+                aria-hidden="true"
+              >
+                <svg
+                  viewBox="0 0 100 1000"
+                  preserveAspectRatio="none"
+                  className="w-full h-full text-[#FDF9F1] fill-current"
+                >
+                  <path d="M0 0 L100 0 C35 220 5 380 25 600 C45 800 15 920 100 1000 L0 1000 Z" />
+                </svg>
               </div>
 
-              {/* Right Column: Editorial photo composition */}
-              <div className="lg:col-span-5 relative flex justify-center">
-                <div className="relative w-full max-w-md aspect-[4/4.5] rounded-[2.5rem] bg-gradient-to-tr from-[#E8EFE5] via-[#FAF8F2] to-[#E8EFE5]/70 p-4 border border-[#78916D]/20 shadow-2xl overflow-hidden flex flex-col justify-between">
-                  
-                  {/* Organic curved shape background */}
-                  <div className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-[#78916D]/15 blur-2xl pointer-events-none" aria-hidden="true" />
-                  <div className="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-[#F47C49]/10 blur-2xl pointer-events-none" aria-hidden="true" />
+              {/* Subtle organic curved transition (Mobile: top edge) */}
+              <div
+                className="lg:hidden absolute -top-1 inset-x-0 h-10 sm:h-14 z-10 pointer-events-none"
+                aria-hidden="true"
+              >
+                <svg
+                  viewBox="0 0 1000 100"
+                  preserveAspectRatio="none"
+                  className="w-full h-full text-[#FDF9F1] fill-current"
+                >
+                  <path d="M0 0 L1000 0 L1000 35 C750 95 250 5 0 65 Z" />
+                </svg>
+              </div>
 
-                  {/* Editorial Photo Composition */}
-                  <div className="relative z-10 w-full flex-1 rounded-[2rem] overflow-hidden bg-[#FFFFFF] border border-[#E8EFE5] shadow-inner flex flex-col items-center justify-center p-6 text-center">
-                    
-                    {/* Visual Slot */}
-                    <div
-                      className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-[#FAF8F2] border-4 border-[#E8EFE5] shadow-md flex items-center justify-center overflow-hidden mb-4"
-                      role="img"
-                      aria-label="Ilustração editorial de um cachorro Golden Retriever e um gato companheiro"
-                    >
-                      <span className="text-6xl sm:text-7xl select-none transform hover:scale-110 transition duration-300">
-                        🐕🐈
-                      </span>
-                    </div>
-
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8EFE5] text-[#174C3C] text-xs font-bold mb-2">
-                      <Sparkles className="w-3.5 h-3.5 text-[#F47C49]" aria-hidden="true" />
-                      <span>Cães & Gatos</span>
-                    </div>
-
-                    <h2 className="text-xl sm:text-2xl font-black text-[#174C3C]">
-                      Cuidado & Companheirismo
-                    </h2>
-
-                    <p className="text-xs text-[#66716A] max-w-xs mt-1 leading-relaxed">
-                      Alimentos premium, petiscos e cuidados selecionados para o bem-estar do seu companheiro.
-                    </p>
-                  </div>
-
-                  {/* Bottom reassurance micro-badge */}
-                  <div className="relative z-10 mt-3 bg-[#FFFFFF]/90 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-[#E8EFE5] shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#78916D]" aria-hidden="true" />
-                      <span className="text-xs font-bold text-[#174C3C]">Barcarena • Entrega Local</span>
-                    </div>
-                    <span className="text-[11px] font-semibold text-[#66716A]">Consulte estoque</span>
-                  </div>
-
-                </div>
+              {/* Full-height Editorial Photograph */}
+              <div className="relative w-full h-full min-h-[360px] sm:min-h-[440px] lg:min-h-full">
+                <Image
+                  src="/hero-pets.jpg"
+                  alt="Fotografia de um cão Golden Retriever e um gato malhado juntos"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover object-center"
+                />
               </div>
 
             </div>
+
           </div>
         </section>
 
