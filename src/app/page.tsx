@@ -276,7 +276,7 @@ export default function Home() {
                   <span className="w-2 h-2 rounded-full bg-[#FAB31F] absolute top-1.5 right-1.5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Atendimento personalizado</h3>
+                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Fale com a nossa equipe</h3>
                   <p className="text-xs text-[#202C27]/75">Tire dúvidas e acompanhe seu pedido pelo WhatsApp</p>
                 </div>
               </div>
@@ -749,7 +749,7 @@ export default function Home() {
               <div className="relative z-10 text-center lg:text-left max-w-2xl">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFFFF]/10 border border-[#FFFFFF]/15 text-[#FDF9F1] text-xs font-bold tracking-wide mb-4">
                   <span className="w-2 h-2 rounded-full bg-[#FAB31F]" aria-hidden="true" />
-                  <span>Atendimento Próximo & Humanizado</span>
+                  <span>Fale com a nossa equipe</span>
                 </div>
 
                 <h2
