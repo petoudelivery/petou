@@ -1,524 +1,1081 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Session } from "@supabase/supabase-js";
 import {
   Lock,
-  Unlock,
   Package,
   MapPin,
   Settings,
-  Database,
   Plus,
   Edit2,
   Trash2,
   CheckCircle2,
   AlertCircle,
-  ExternalLink,
   ArrowLeft,
-  DollarSign,
   Save,
+  X,
+  Upload,
+  LogOut,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  ImageIcon,
+  RefreshCw,
 } from "lucide-react";
-import { isSupabaseConfigured } from "@/lib/supabase";
-import { fetchProducts, fetchDeliveryAreas, fetchWhatsAppNumber } from "@/lib/storeService";
-import { Product, Neighborhood } from "@/types/store";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { CATEGORIES } from "@/data/products";
+import { Neighborhood } from "@/types/store";
+import {
+  RawProduct,
+  ProductInput,
+  adminFetchAllProducts,
+  adminCreateProduct,
+  adminUpdateProduct,
+  adminDeleteProduct,
+  uploadProductImage,
+  deleteProductImage,
+  adminUpdateDeliveryFee,
+  adminSaveWhatsApp,
+} from "@/lib/adminService";
+import { fetchDeliveryAreas, fetchWhatsAppNumber } from "@/lib/storeService";
+
+// ─── Form state ───────────────────────────────────────────────────────────────
+
+interface FormState {
+  name: string;
+  brand: string;
+  size: string;
+  price: string;
+  category: string;
+  description: string;
+  badge: string;
+  icon_name: string;
+  is_active: boolean;
+  image_url: string;
+}
+
+const EMPTY_FORM: FormState = {
+  name: "",
+  brand: "",
+  size: "",
+  price: "",
+  category: "Rações para cães",
+  description: "",
+  badge: "",
+  icon_name: "dog-bowl",
+  is_active: true,
+  image_url: "",
+};
+
+const ICON_OPTIONS = [
+  { value: "dog-bowl", label: "🍲 Ração para cão" },
+  { value: "cat-bowl", label: "🐟 Ração para gato" },
+  { value: "bone", label: "🦴 Petisco" },
+  { value: "toy", label: "🎾 Brinquedo" },
+  { value: "shampoo", label: "🧴 Higiene" },
+  { value: "collar", label: "🦮 Acessório" },
+];
+
+function productToForm(p: RawProduct): FormState {
+  return {
+    name: p.name,
+    brand: p.brand || "",
+    size: p.size || "",
+    price: String(p.price),
+    category: p.category,
+    description: p.description || "",
+    badge: p.badge || "",
+    icon_name: p.icon_name || "dog-bowl",
+    is_active: p.is_active,
+    image_url: p.image_url || "",
+  };
+}
+
+// ─── Shared input class ───────────────────────────────────────────────────────
+
+const INPUT_CLS =
+  "w-full text-sm px-3.5 py-2.5 rounded-xl border border-[#08422E]/20 bg-[#FDF9F1]/40 text-[#08422E] placeholder-[#08422E]/40 focus:outline-none focus:ring-2 focus:ring-[#08422E]/30 min-h-[44px]";
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [accessCode, setAccessCode] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState<"products" | "delivery" | "settings" | "database">("products");
+  // Auth
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const [products, setProducts] = useState<Product[]>([]);
+  // Tabs
+  const [activeTab, setActiveTab] = useState<"products" | "delivery" | "settings">("products");
+
+  // Data
+  const [products, setProducts] = useState<RawProduct[]>([]);
   const [deliveryAreas, setDeliveryAreas] = useState<Neighborhood[]>([]);
   const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [dataLoading, setDataLoading] = useState(false);
 
-  // Load initial store data
+  // Product form
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<RawProduct | null>(null);
+  const [formData, setFormData] = useState<FormState>(EMPTY_FORM);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pendingImageDelete, setPendingImageDelete] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Delete
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Delivery
+  const [deliveryFeeInputs, setDeliveryFeeInputs] = useState<Record<string, string>>({});
+  const [deliverySaving, setDeliverySaving] = useState<string | null>(null);
+
+  // Settings
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
+  // Global feedback
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+
+  // ── Auth listener ────────────────────────────────────────────────────────────
+
   useEffect(() => {
-    async function loadData() {
+    if (!supabase) {
+      setAuthLoading(false);
+      return;
+    }
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      setSession(s);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── Load data when authenticated ────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!session) return;
+    loadData();
+  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadData = async () => {
+    setDataLoading(true);
+    try {
       const [prods, areas, wa] = await Promise.all([
-        fetchProducts(),
+        adminFetchAllProducts(),
         fetchDeliveryAreas(),
         fetchWhatsAppNumber(),
       ]);
       setProducts(prods);
       setDeliveryAreas(areas);
       setWhatsappNumber(wa);
+      const feeMap: Record<string, string> = {};
+      for (const a of areas) {
+        feeMap[a.id] = a.fee !== null ? String(a.fee) : "";
+      }
+      setDeliveryFeeInputs(feeMap);
+    } finally {
+      setDataLoading(false);
     }
-    loadData();
-  }, []);
+  };
 
-  const handleLogin = (e: React.FormEvent) => {
+  // ── Auth handlers ────────────────────────────────────────────────────────────
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Scaffold authentication stub: accepts "petou2026" or any non-empty code for demo/stub purpose
-    if (accessCode.trim() === "petou2026" || accessCode.trim().length >= 4) {
-      setIsAuthenticated(true);
-      setAuthError("");
-    } else {
-      setAuthError("Código de acesso inválido. (Dica de desenvolvimento: use 'petou2026')");
+    if (!supabase) {
+      setLoginError("Supabase não está configurado.");
+      return;
+    }
+    setLoginError("");
+    setLoginLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    });
+    if (error) {
+      setLoginError("E-mail ou senha incorretos.");
+      setLoginLoading(false);
     }
   };
 
-  const handleUpdatePrice = (id: string, newPrice: number) => {
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              price: newPrice,
-              formattedPrice: `R$ ${newPrice.toFixed(2).replace(".", ",")}`,
-            }
-          : p
-      )
-    );
-    triggerSuccessFeedback("Preço atualizado no estado local!");
+  const handleLogout = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
   };
 
-  const handleUpdateFee = (id: string, newFee: number | null) => {
-    setDeliveryAreas((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, fee: newFee } : a))
-    );
-    triggerSuccessFeedback("Taxa de entrega atualizada no estado local!");
+  // ── Form helpers ─────────────────────────────────────────────────────────────
+
+  const openAddForm = () => {
+    setEditingProduct(null);
+    setFormData(EMPTY_FORM);
+    setImageFile(null);
+    setImagePreview(null);
+    setPendingImageDelete(null);
+    setSaveError("");
+    setShowForm(true);
   };
 
-  const triggerSuccessFeedback = (msg: string) => {
-    setSaveSuccess(msg);
-    setTimeout(() => setSaveSuccess(null), 3000);
+  const openEditForm = (p: RawProduct) => {
+    setEditingProduct(p);
+    setFormData(productToForm(p));
+    setImageFile(null);
+    setImagePreview(null);
+    setPendingImageDelete(null);
+    setSaveError("");
+    setShowForm(true);
   };
 
-  // If not authenticated, show professional PIN / Login gate
-  if (!isAuthenticated) {
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingProduct(null);
+    setImageFile(null);
+    setImagePreview(null);
+    setPendingImageDelete(null);
+    setSaveError("");
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    if (formData.image_url) setPendingImageDelete(formData.image_url);
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData((prev) => ({ ...prev, image_url: "" }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSaveProduct = async () => {
+    setSaveError("");
+    if (!formData.name.trim()) { setSaveError("O nome do produto é obrigatório."); return; }
+    if (!formData.price || Number(formData.price) <= 0) { setSaveError("Informe um preço válido."); return; }
+    if (!formData.category) { setSaveError("Selecione uma categoria."); return; }
+
+    setIsSaving(true);
+    try {
+      let finalImageUrl: string | null = formData.image_url || null;
+
+      // If replacing existing image, mark old for deletion
+      const oldImageToDelete =
+        imageFile && editingProduct?.image_url ? editingProduct.image_url : pendingImageDelete;
+
+      if (imageFile) {
+        finalImageUrl = await uploadProductImage(imageFile);
+      }
+
+      const input: ProductInput = {
+        name: formData.name.trim(),
+        brand: formData.brand.trim() || "Petou",
+        size: formData.size.trim() || "1 un",
+        price: Number(formData.price),
+        category: formData.category,
+        description: formData.description.trim(),
+        badge: formData.badge.trim() || null,
+        icon_name: formData.icon_name,
+        is_active: formData.is_active,
+        image_url: finalImageUrl,
+      };
+
+      if (editingProduct) {
+        await adminUpdateProduct(editingProduct.id, input);
+        showFeedback("success", `"${input.name}" atualizado com sucesso.`);
+      } else {
+        await adminCreateProduct(input);
+        showFeedback("success", `"${input.name}" criado com sucesso.`);
+      }
+
+      if (oldImageToDelete) {
+        await deleteProductImage(oldImageToDelete);
+      }
+
+      const updated = await adminFetchAllProducts();
+      setProducts(updated);
+      closeForm();
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : "Erro ao salvar produto.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    setIsDeleting(true);
+    try {
+      const p = products.find((x) => x.id === deleteConfirmId);
+      await adminDeleteProduct(deleteConfirmId);
+      if (p?.image_url) await deleteProductImage(p.image_url);
+      const updated = await adminFetchAllProducts();
+      setProducts(updated);
+      showFeedback("success", "Produto excluído.");
+    } catch (err: unknown) {
+      showFeedback("error", err instanceof Error ? err.message : "Erro ao excluir produto.");
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const handleSaveDeliveryFee = async (id: string) => {
+    const feeStr = deliveryFeeInputs[id] ?? "";
+    const fee = feeStr.trim() === "" ? null : Number(feeStr);
+    if (feeStr.trim() !== "" && isNaN(fee as number)) {
+      showFeedback("error", "Valor inválido para a taxa.");
+      return;
+    }
+    setDeliverySaving(id);
+    try {
+      await adminUpdateDeliveryFee(id, fee);
+      setDeliveryAreas((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, fee } : a))
+      );
+      showFeedback("success", "Taxa atualizada.");
+    } catch (err: unknown) {
+      showFeedback("error", err instanceof Error ? err.message : "Erro ao salvar taxa.");
+    } finally {
+      setDeliverySaving(null);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setSettingsSaving(true);
+    try {
+      await adminSaveWhatsApp(whatsappNumber.trim());
+      showFeedback("success", "Número de WhatsApp salvo.");
+    } catch (err: unknown) {
+      showFeedback("error", err instanceof Error ? err.message : "Erro ao salvar configurações.");
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const showFeedback = (type: "success" | "error", msg: string) => {
+    setFeedback({ type, msg });
+    setTimeout(() => setFeedback(null), 4500);
+  };
+
+  // ── Render: Supabase not configured ─────────────────────────────────────────
+
+  if (!isSupabaseConfigured) {
     return (
-      <div className="min-h-screen bg-petou-cream flex flex-col justify-center items-center p-4 font-sans text-petou-green">
-        <div className="w-full max-w-md bg-petou-white rounded-3xl p-8 border border-petou-green/10 shadow-xl space-y-6">
-          <div className="text-center space-y-2">
-            <div className="relative w-40 h-14 mx-auto mb-2">
-              <Image
-                src="/petou-logo.png"
-                alt="Petou Store"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-petou-green/10 text-petou-green text-xs font-bold uppercase tracking-wider">
-              <Lock className="w-3.5 h-3.5" />
-              Painel de Gestão
-            </div>
-            <h1 className="text-2xl font-black text-petou-green">Área Administrativa</h1>
-            <p className="text-xs text-petou-green/75">
-              Acesso restrito para gerenciamento de produtos, preços e bairros de Barcarena.
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-petou-green mb-1.5">
-                Código de Acesso do Administrador
-              </label>
-              <input
-                type="password"
-                value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value)}
-                placeholder="Digite o código (ex: petou2026)"
-                className="w-full bg-petou-cream/40 text-petou-green placeholder-petou-green/45 text-sm px-4 py-3 rounded-2xl border border-petou-green/20 focus:outline-none focus:ring-2 focus:ring-petou-yellow"
-              />
-            </div>
-
-            {authError && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{authError}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="w-full py-3.5 px-4 rounded-2xl bg-petou-green text-petou-white font-bold text-sm hover:bg-petou-green/90 transition shadow-md flex items-center justify-center gap-2"
-            >
-              <Unlock className="w-4 h-4 text-petou-yellow" />
-              <span>Acessar Painel</span>
-            </button>
-          </form>
-
-          <div className="pt-2 text-center border-t border-petou-green/10">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 text-xs text-petou-green/70 hover:text-petou-green font-semibold"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Voltar para a Loja
-            </Link>
-          </div>
+      <div className="min-h-screen bg-[#FDF9F1] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
+          <AlertCircle className="mx-auto mb-4 text-amber-500" size={48} />
+          <h1 className="text-xl font-bold text-[#08422E] mb-2">Supabase não configurado</h1>
+          <p className="text-sm text-[#08422E]/70 mb-4">
+            Adicione as variáveis de ambiente <code className="bg-[#FDF9F1] px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> e{" "}
+            <code className="bg-[#FDF9F1] px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> ao arquivo{" "}
+            <code className="bg-[#FDF9F1] px-1 rounded">.env.local</code>.
+          </p>
+          <Link href="/" className="text-sm text-[#08422E] underline">← Voltar à loja</Link>
         </div>
       </div>
     );
   }
 
-  // Authenticated Admin Dashboard
-  return (
-    <div className="min-h-screen bg-petou-cream/60 flex flex-col font-sans text-petou-green">
-      
-      {/* Admin Top Navigation */}
-      <header className="bg-petou-green text-petou-white sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="hover:opacity-80 transition">
-              <span className="text-lg font-black tracking-wider text-petou-yellow">
-                PETOU ADMIN
-              </span>
-            </Link>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-petou-white/15 text-petou-white font-semibold">
-              Barcarena - PA
-            </span>
+  // ── Render: Loading ──────────────────────────────────────────────────────────
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#FDF9F1] flex items-center justify-center">
+        <RefreshCw className="animate-spin text-[#08422E]" size={32} />
+      </div>
+    );
+  }
+
+  // ── Render: Login ────────────────────────────────────────────────────────────
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-[#FDF9F1] flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#08422E] rounded-2xl mb-4">
+              <Package size={28} className="text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-[#08422E]">Petou Admin</h1>
+            <p className="text-sm text-[#08422E]/60 mt-1">Acesso restrito</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Supabase status badge */}
-            <div
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                isSupabaseConfigured
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
-                  : "bg-petou-yellow/20 text-petou-yellow border border-petou-yellow/30"
-              }`}
-            >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isSupabaseConfigured ? "bg-emerald-400" : "bg-petou-yellow animate-pulse"
-                }`}
+          <form
+            onSubmit={handleLogin}
+            className="bg-white rounded-2xl shadow-sm border border-[#08422E]/10 p-7 space-y-4"
+          >
+            <div>
+              <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                E-mail
+              </label>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="admin@seudominio.com"
+                required
+                autoComplete="username"
+                className={INPUT_CLS}
               />
-              <span>{isSupabaseConfigured ? "Supabase Conectado" : "Modo Fallback Demo"}</span>
             </div>
 
-            <Link
-              href="/"
-              className="text-xs bg-petou-white/10 hover:bg-petou-white/20 text-petou-white px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Ver Loja</span>
-            </Link>
+            <div>
+              <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                Senha
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                  className={`${INPUT_CLS} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#08422E]/40 hover:text-[#08422E]"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {loginError && (
+              <p className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+                <AlertCircle size={15} /> {loginError}
+              </p>
+            )}
 
             <button
-              onClick={() => setIsAuthenticated(false)}
-              className="text-xs text-red-300 hover:text-red-100 font-bold ml-2"
+              type="submit"
+              disabled={loginLoading}
+              className="w-full flex items-center justify-center gap-2 bg-[#08422E] text-white text-sm font-semibold py-3 rounded-xl hover:bg-[#08422E]/90 active:scale-[0.98] transition-all disabled:opacity-60 min-h-[44px]"
             >
-              Sair
+              {loginLoading ? (
+                <RefreshCw size={16} className="animate-spin" />
+              ) : (
+                <Lock size={16} />
+              )}
+              {loginLoading ? "Entrando…" : "Entrar"}
             </button>
+
+            <div className="text-center pt-1">
+              <Link href="/" className="text-xs text-[#08422E]/50 hover:text-[#08422E] transition-colors">
+                ← Voltar à loja
+              </Link>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render: Admin Dashboard ──────────────────────────────────────────────────
+
+  const displayImageSrc = imagePreview || formData.image_url || null;
+
+  return (
+    <div className="min-h-screen bg-[#FDF9F1]">
+
+      {/* Global Feedback Banner */}
+      {feedback && (
+        <div
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${
+            feedback.type === "success"
+              ? "bg-[#08422E] text-white"
+              : "bg-red-600 text-white"
+          }`}
+        >
+          {feedback.type === "success" ? (
+            <CheckCircle2 size={16} />
+          ) : (
+            <AlertCircle size={16} />
+          )}
+          {feedback.msg}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-7 max-w-sm w-full">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 size={18} className="text-red-600" />
+              </div>
+              <h2 className="text-base font-bold text-[#08422E]">Excluir produto?</h2>
+            </div>
+            <p className="text-sm text-[#08422E]/70 mb-6">
+              Esta ação não pode ser desfeita. O produto e sua imagem serão removidos permanentemente.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 py-2.5 rounded-xl border border-[#08422E]/20 text-sm font-medium text-[#08422E] hover:bg-[#FDF9F1] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+              >
+                {isDeleting ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                {isDeleting ? "Excluindo…" : "Excluir"}
+              </button>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-[#08422E] text-white px-5 py-3.5 flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-sm">
+            <ArrowLeft size={15} />
+          </Link>
+          <div className="w-px h-5 bg-white/20" />
+          <div className="flex items-center gap-2">
+            <Package size={18} className="text-[#FAB31F]" />
+            <span className="font-bold text-base">Petou Admin</span>
+          </div>
+          <span className="hidden sm:inline-flex items-center gap-1 text-xs bg-green-500/25 text-green-200 px-2 py-0.5 rounded-full border border-green-500/30">
+            <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+            Supabase conectado
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            target="_blank"
+            className="hidden sm:flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+          >
+            <ExternalLink size={13} /> Ver loja
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+          >
+            <LogOut size={14} /> Sair
+          </button>
         </div>
       </header>
 
-      {/* Main Admin Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
-        
-        {/* Save feedback banner */}
-        {saveSuccess && (
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{saveSuccess}</span>
-          </div>
-        )}
+      <div className="max-w-6xl mx-auto px-4 py-6">
 
-        {/* Dashboard Title & Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-petou-green">
-              Gestão de Catálogo e Configurações
-            </h1>
-            <p className="text-xs sm:text-sm text-petou-green/75 mt-0.5">
-              Altere preços, consulte bairros atendidos e conecte seu banco de dados Supabase.
-            </p>
-          </div>
+        {/* Tab Nav */}
+        <nav className="flex gap-1 bg-white rounded-xl p-1 shadow-sm border border-[#08422E]/10 mb-6 w-fit">
+          {(["products", "delivery", "settings"] as const).map((tab) => {
+            const labels = { products: "Produtos", delivery: "Bairros & Taxas", settings: "Configurações" };
+            const icons = {
+              products: <Package size={15} />,
+              delivery: <MapPin size={15} />,
+              settings: <Settings size={15} />,
+            };
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === tab
+                    ? "bg-[#08422E] text-white shadow-sm"
+                    : "text-[#08422E]/60 hover:text-[#08422E] hover:bg-[#FDF9F1]"
+                }`}
+              >
+                {icons[tab]} {labels[tab]}
+              </button>
+            );
+          })}
+        </nav>
 
-          {/* Tab Navigation */}
-          <div className="flex items-center gap-1.5 bg-petou-white p-1 rounded-2xl border border-petou-green/10 shadow-sm overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("products")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                activeTab === "products"
-                  ? "bg-petou-green text-petou-white shadow-sm"
-                  : "text-petou-green/70 hover:text-petou-green"
-              }`}
-            >
-              <Package className="w-3.5 h-3.5" />
-              <span>Produtos ({products.length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("delivery")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                activeTab === "delivery"
-                  ? "bg-petou-green text-petou-white shadow-sm"
-                  : "text-petou-green/70 hover:text-petou-green"
-              }`}
-            >
-              <MapPin className="w-3.5 h-3.5" />
-              <span>Bairros & Taxas</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("settings")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                activeTab === "settings"
-                  ? "bg-petou-green text-petou-white shadow-sm"
-                  : "text-petou-green/70 hover:text-petou-green"
-              }`}
-            >
-              <Settings className="w-3.5 h-3.5" />
-              <span>WhatsApp / Loja</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("database")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                activeTab === "database"
-                  ? "bg-petou-green text-petou-white shadow-sm"
-                  : "text-petou-green/70 hover:text-petou-green"
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>Schema SQL</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Tab 1: Products and Price Management */}
+        {/* ── Products Tab ────────────────────────────────────────────────────── */}
         {activeTab === "products" && (
-          <div className="bg-petou-white rounded-3xl border border-petou-green/10 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-petou-green/10 flex items-center justify-between">
+          <div>
+            {/* Toolbar */}
+            <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-lg font-bold text-petou-green">Produtos Cadastrados</h2>
-                <p className="text-xs text-petou-green/70">
-                  Ajuste preços ou gerencie os produtos ativos na loja.
+                <h2 className="text-lg font-bold text-[#08422E]">Produtos</h2>
+                <p className="text-sm text-[#08422E]/60">
+                  {products.length} produto{products.length !== 1 ? "s" : ""} cadastrado{products.length !== 1 ? "s" : ""}
                 </p>
               </div>
-              <button
-                onClick={() => triggerSuccessFeedback("Formulário de cadastro pronto para Supabase!")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-petou-green text-petou-white text-xs font-bold hover:bg-petou-green/90 transition shadow-sm"
-              >
-                <Plus className="w-4 h-4 text-petou-yellow" />
-                <span>Adicionar Produto</span>
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-petou-cream/50 text-petou-green/80 uppercase text-[10px] font-bold border-b border-petou-green/10">
-                  <tr>
-                    <th className="py-3 px-6">Produto</th>
-                    <th className="py-3 px-6">Categoria</th>
-                    <th className="py-3 px-6">Tamanho</th>
-                    <th className="py-3 px-6">Preço (R$)</th>
-                    <th className="py-3 px-6 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-petou-green/10 text-petou-green">
-                  {products.map((item) => (
-                    <tr key={item.id} className="hover:bg-petou-cream/20 transition">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-lg bg-petou-cream flex items-center justify-center text-base border border-petou-green/10">
-                            🐾
-                          </span>
-                          <div>
-                            <p className="font-bold">{item.name}</p>
-                            <span className="text-[11px] text-petou-green/60">
-                              {item.brand} {item.isDemo && "• (Demo)"}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 font-medium">{item.category}</td>
-                      <td className="py-4 px-6 text-petou-green/75">{item.size}</td>
-                      <td className="py-4 px-6 font-bold">
-                        <div className="flex items-center gap-1 max-w-[120px]">
-                          <span>R$</span>
-                          <input
-                            type="number"
-                            step="0.50"
-                            defaultValue={item.price}
-                            onBlur={(e) =>
-                              handleUpdatePrice(item.id, parseFloat(e.target.value) || item.price)
-                            }
-                            className="w-20 bg-petou-cream/50 px-2 py-1 rounded border border-petou-green/20 font-bold focus:outline-none focus:ring-1 focus:ring-petou-yellow"
-                          />
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => triggerSuccessFeedback(`Edição do item ${item.name} selecionada`)}
-                            className="p-1.5 rounded-lg text-petou-green hover:bg-petou-cream transition"
-                            title="Editar"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Delivery Areas & Fees */}
-        {activeTab === "delivery" && (
-          <div className="bg-petou-white rounded-3xl border border-petou-green/10 shadow-sm p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-petou-green">
-                  Bairros e Taxas de Entrega em Barcarena
-                </h2>
-                <p className="text-xs text-petou-green/70">
-                  Configure as taxas de frete por localidade em Barcarena - PA.
-                </p>
-              </div>
-              <button
-                onClick={() => triggerSuccessFeedback("Novo bairro pronto para inclusão!")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-petou-green text-petou-white text-xs font-bold hover:bg-petou-green/90 transition shadow-sm"
-              >
-                <Plus className="w-4 h-4 text-petou-yellow" />
-                <span>Novo Bairro</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {deliveryAreas.map((area) => (
-                <div
-                  key={area.id}
-                  className="p-4 rounded-2xl bg-petou-cream/30 border border-petou-green/10 flex items-center justify-between"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={loadData}
+                  disabled={dataLoading}
+                  className="flex items-center gap-1.5 text-sm text-[#08422E]/60 hover:text-[#08422E] px-3 py-2 rounded-lg hover:bg-[#08422E]/5 transition-colors disabled:opacity-40"
                 >
-                  <div>
-                    <h4 className="text-sm font-bold text-petou-green">{area.name}</h4>
-                    <span className="text-xs text-petou-green/70">
-                      {area.fee !== null
-                        ? `Taxa: R$ ${area.fee.toFixed(2).replace(".", ",")}`
-                        : "Taxa a confirmar"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      step="1.00"
-                      placeholder="Taxa"
-                      defaultValue={area.fee !== null ? area.fee : ""}
-                      onBlur={(e) => {
-                        const val = e.target.value.trim() === "" ? null : parseFloat(e.target.value);
-                        handleUpdateFee(area.id, val);
-                      }}
-                      className="w-16 text-xs bg-petou-white px-2 py-1.5 rounded-lg border border-petou-green/20 font-bold text-right"
-                    />
-                  </div>
-                </div>
-              ))}
+                  <RefreshCw size={14} className={dataLoading ? "animate-spin" : ""} /> Atualizar
+                </button>
+                <button
+                  onClick={openAddForm}
+                  className="flex items-center gap-2 bg-[#08422E] text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[#08422E]/90 transition-all active:scale-95"
+                >
+                  <Plus size={15} /> Novo produto
+                </button>
+              </div>
             </div>
+
+            {/* Loading */}
+            {dataLoading && (
+              <div className="flex items-center justify-center py-20 text-[#08422E]/50">
+                <RefreshCw size={24} className="animate-spin mr-3" /> Carregando…
+              </div>
+            )}
+
+            {/* Empty */}
+            {!dataLoading && products.length === 0 && (
+              <div className="text-center py-20 bg-white rounded-2xl border border-[#08422E]/10">
+                <Package size={48} className="mx-auto text-[#08422E]/20 mb-4" />
+                <p className="text-[#08422E]/50 text-sm">Nenhum produto cadastrado ainda.</p>
+                <button
+                  onClick={openAddForm}
+                  className="mt-4 text-sm text-[#08422E] font-medium underline underline-offset-2"
+                >
+                  Criar o primeiro produto
+                </button>
+              </div>
+            )}
+
+            {/* Product Grid */}
+            {!dataLoading && products.length > 0 && (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {products.map((p) => (
+                  <div
+                    key={p.id}
+                    className="bg-white rounded-2xl border border-[#08422E]/10 overflow-hidden hover:shadow-md transition-shadow"
+                  >
+                    {/* Image */}
+                    <div className="relative h-44 bg-[#FDF9F1] flex items-center justify-center">
+                      {p.image_url ? (
+                        <Image
+                          src={p.image_url}
+                          alt={p.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                      ) : (
+                        <ImageIcon size={36} className="text-[#08422E]/20" />
+                      )}
+                      {/* Status badge */}
+                      <div className={`absolute top-2.5 right-2.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        p.is_active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-600"
+                      }`}>
+                        {p.is_active ? "Ativo" : "Inativo"}
+                      </div>
+                      {p.badge && (
+                        <div className="absolute top-2.5 left-2.5 text-xs font-bold px-2.5 py-1 rounded-full bg-[#FAB31F] text-[#08422E]">
+                          {p.badge}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="p-4">
+                      <p className="text-xs text-[#08422E]/50 mb-0.5">{p.category}</p>
+                      <h3 className="font-semibold text-[#08422E] text-sm leading-tight mb-1">{p.name}</h3>
+                      <p className="text-xs text-[#08422E]/60 mb-2">{p.brand} · {p.size}</p>
+                      <p className="text-base font-bold text-[#08422E]">
+                        R$ {Number(p.price).toFixed(2).replace(".", ",")}
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex border-t border-[#08422E]/8">
+                      <button
+                        onClick={() => openEditForm(p)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-[#08422E]/70 hover:text-[#08422E] hover:bg-[#FDF9F1] transition-colors"
+                      >
+                        <Edit2 size={14} /> Editar
+                      </button>
+                      <div className="w-px bg-[#08422E]/8" />
+                      <button
+                        onClick={() => setDeleteConfirmId(p.id)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 size={14} /> Excluir
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Tab 3: Store Settings & WhatsApp Number */}
-        {activeTab === "settings" && (
-          <div className="bg-petou-white rounded-3xl border border-petou-green/10 shadow-sm p-6 space-y-6 max-w-xl">
-            <div>
-              <h2 className="text-lg font-bold text-petou-green">Configurações Gerais da Loja</h2>
-              <p className="text-xs text-petou-green/70">
-                Gerencie o canal de atendimento e recepção de pedidos.
-              </p>
+        {/* ── Delivery Tab ────────────────────────────────────────────────────── */}
+        {activeTab === "delivery" && (
+          <div>
+            <div className="mb-5">
+              <h2 className="text-lg font-bold text-[#08422E]">Bairros & Taxas de Entrega</h2>
+              <p className="text-sm text-[#08422E]/60">Deixe em branco para "a confirmar no atendimento".</p>
             </div>
 
-            <div className="space-y-4">
+            {dataLoading ? (
+              <div className="flex items-center justify-center py-20 text-[#08422E]/50">
+                <RefreshCw size={24} className="animate-spin mr-3" /> Carregando…
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-[#08422E]/10 divide-y divide-[#08422E]/8 overflow-hidden shadow-sm">
+                {deliveryAreas.map((area) => (
+                  <div
+                    key={area.id}
+                    className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-[#FDF9F1]/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <MapPin size={15} className="text-[#08422E]/40 shrink-0" />
+                      <span className="text-sm font-medium text-[#08422E] truncate">{area.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs text-[#08422E]/50">R$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={deliveryFeeInputs[area.id] ?? ""}
+                        onChange={(e) =>
+                          setDeliveryFeeInputs((prev) => ({
+                            ...prev,
+                            [area.id]: e.target.value,
+                          }))
+                        }
+                        placeholder="—"
+                        className="w-24 text-sm px-2.5 py-1.5 rounded-lg border border-[#08422E]/20 bg-[#FDF9F1]/40 text-[#08422E] focus:outline-none focus:ring-2 focus:ring-[#08422E]/30 text-right"
+                      />
+                      <button
+                        onClick={() => handleSaveDeliveryFee(area.id)}
+                        disabled={deliverySaving === area.id}
+                        className="text-xs font-semibold bg-[#08422E] text-white px-3 py-1.5 rounded-lg hover:bg-[#08422E]/90 transition-colors disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {deliverySaving === area.id ? (
+                          <RefreshCw size={12} className="animate-spin" />
+                        ) : (
+                          <Save size={12} />
+                        )}
+                        Salvar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {deliveryAreas.length === 0 && (
+                  <p className="text-center text-sm text-[#08422E]/50 py-10">
+                    Nenhuma área de entrega encontrada.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Settings Tab ────────────────────────────────────────────────────── */}
+        {activeTab === "settings" && (
+          <div>
+            <div className="mb-5">
+              <h2 className="text-lg font-bold text-[#08422E]">Configurações</h2>
+              <p className="text-sm text-[#08422E]/60">Ajustes gerais da loja.</p>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#08422E]/10 shadow-sm p-6 max-w-md space-y-5">
               <div>
-                <label className="block text-xs font-bold text-petou-green mb-1.5">
-                  Número de WhatsApp para Pedidos (com DDI e DDD)
+                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                  Número de WhatsApp
                 </label>
+                <p className="text-xs text-[#08422E]/50 mb-2">
+                  Somente dígitos, incluindo código do país e DDD. Ex.: 5591980762149
+                </p>
                 <input
                   type="text"
                   value={whatsappNumber}
                   onChange={(e) => setWhatsappNumber(e.target.value)}
-                  placeholder="Ex: 5591980762149"
-                  className="w-full bg-petou-cream/40 text-petou-green text-sm px-4 py-2.5 rounded-xl border border-petou-green/20 focus:outline-none focus:ring-2 focus:ring-petou-yellow"
+                  placeholder="5591980762149"
+                  className={INPUT_CLS}
                 />
-                <p className="text-[11px] text-petou-green/60 mt-1">
-                  Este número recebe todos os fechamentos de pedidos gerados pelo CartDrawer.
-                </p>
               </div>
-
               <button
-                type="button"
-                onClick={() => triggerSuccessFeedback("Número de WhatsApp salvo com sucesso!")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-petou-green text-petou-white text-xs font-bold hover:bg-petou-green/90 transition shadow-sm"
+                onClick={handleSaveSettings}
+                disabled={settingsSaving}
+                className="flex items-center gap-2 bg-[#08422E] text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[#08422E]/90 transition-all active:scale-95 disabled:opacity-60"
               >
-                <Save className="w-4 h-4 text-petou-yellow" />
-                <span>Salvar Configurações</span>
+                {settingsSaving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                {settingsSaving ? "Salvando…" : "Salvar configurações"}
               </button>
             </div>
           </div>
         )}
-
-        {/* Tab 4: SQL Schema Guide for Supabase */}
-        {activeTab === "database" && (
-          <div className="bg-petou-white rounded-3xl border border-petou-green/10 shadow-sm p-6 space-y-4">
-            <div>
-              <h2 className="text-lg font-bold text-petou-green">
-                Estrutura de Tabelas do Supabase (SQL)
-              </h2>
-              <p className="text-xs text-petou-green/70">
-                Copie o script SQL abaixo e execute no SQL Editor do seu projeto Supabase para criar as tabelas com fallback automático:
-              </p>
-            </div>
-
-            <pre className="bg-zinc-900 text-zinc-100 p-4 rounded-2xl text-xs overflow-x-auto font-mono leading-relaxed">
-{`-- 1. Tabela de Categorias
-CREATE TABLE IF NOT EXISTS categories (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- 2. Tabela de Produtos
-CREATE TABLE IF NOT EXISTS products (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  brand TEXT NOT NULL DEFAULT 'PETOU',
-  size TEXT NOT NULL DEFAULT '1 un',
-  price NUMERIC(10, 2) NOT NULL,
-  category TEXT NOT NULL,
-  is_demo BOOLEAN DEFAULT false,
-  badge TEXT,
-  description TEXT,
-  icon_name TEXT DEFAULT 'dog-bowl',
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- 3. Tabela de Áreas de Entrega (Barcarena)
-CREATE TABLE IF NOT EXISTS delivery_areas (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL UNIQUE,
-  fee NUMERIC(10, 2), -- NULL significa taxa a confirmar
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- 4. Tabela de Configurações da Loja
-CREATE TABLE IF NOT EXISTS store_settings (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Inserir WhatsApp padrão
-INSERT INTO store_settings (key, value)
-VALUES ('whatsapp_number', '5591980762149')
-ON CONFLICT (key) DO NOTHING;`}
-            </pre>
-          </div>
-        )}
-
       </div>
 
+      {/* ── Product Form Drawer ──────────────────────────────────────────────── */}
+      {showForm && (
+        <div className="fixed inset-0 z-40 flex items-stretch">
+          {/* Backdrop */}
+          <div
+            className="flex-1 bg-black/40 backdrop-blur-sm"
+            onClick={closeForm}
+          />
+
+          {/* Panel */}
+          <div className="w-full max-w-md bg-white flex flex-col shadow-2xl">
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#08422E]/10">
+              <h2 className="text-base font-bold text-[#08422E]">
+                {editingProduct ? "Editar produto" : "Novo produto"}
+              </h2>
+              <button
+                onClick={closeForm}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#FDF9F1] text-[#08422E]/50 hover:text-[#08422E] transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable form body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+              {/* Image section */}
+              <div>
+                <label className="block text-xs font-semibold text-[#08422E]/70 mb-2 uppercase tracking-wide">
+                  Imagem do produto
+                </label>
+                {displayImageSrc ? (
+                  <div className="relative h-48 rounded-xl overflow-hidden bg-[#FDF9F1] mb-2">
+                    <Image
+                      src={displayImageSrc}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                      sizes="400px"
+                      unoptimized={!!imagePreview} // base64 preview
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-red-500 hover:bg-white shadow-sm transition-colors"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="h-32 border-2 border-dashed border-[#08422E]/20 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#08422E]/40 hover:bg-[#FDF9F1]/60 transition-all mb-2"
+                  >
+                    <ImageIcon size={28} className="text-[#08422E]/30" />
+                    <span className="text-xs text-[#08422E]/50">Clique para selecionar imagem</span>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+                {!displayImageSrc && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 text-xs font-medium text-[#08422E] border border-[#08422E]/20 px-3 py-2 rounded-lg hover:bg-[#FDF9F1] transition-colors"
+                  >
+                    <Upload size={13} /> Selecionar arquivo
+                  </button>
+                )}
+              </div>
+
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                  Nome *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                  placeholder="Ex.: Ração Dog Chow Adulto"
+                  className={INPUT_CLS}
+                />
+              </div>
+
+              {/* Brand + Size */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                    Marca
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.brand}
+                    onChange={(e) => setFormData((p) => ({ ...p, brand: e.target.value }))}
+                    placeholder="Ex.: Nestlé"
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                    Embalagem
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.size}
+                    onChange={(e) => setFormData((p) => ({ ...p, size: e.target.value }))}
+                    placeholder="Ex.: 15 kg"
+                    className={INPUT_CLS}
+                  />
+                </div>
+              </div>
+
+              {/* Price */}
+              <div>
+                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                  Preço (R$) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData((p) => ({ ...p, price: e.target.value }))}
+                  placeholder="0,00"
+                  className={INPUT_CLS}
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                  Categoria *
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData((p) => ({ ...p, category: e.target.value }))}
+                  className={INPUT_CLS}
+                >
+                  {CATEGORIES.filter((c) => c !== "Todos").map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Icon */}
+              <div>
+                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                  Ícone de categoria
+                </label>
+                <select
+                  value={formData.icon_name}
+                  onChange={(e) => setFormData((p) => ({ ...p, icon_name: e.target.value }))}
+                  className={INPUT_CLS}
+                >
+                  {ICON_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                  Descrição
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="Descreva o produto de forma breve…"
+                  className={`${INPUT_CLS} resize-none`}
+                />
+              </div>
+
+              {/* Badge */}
+              <div>
+                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
+                  Badge (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.badge}
+                  onChange={(e) => setFormData((p) => ({ ...p, badge: e.target.value }))}
+                  placeholder="Ex.: Novo, Promoção"
+                  className={INPUT_CLS}
+                />
+              </div>
+
+              {/* Active toggle */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl border border-[#08422E]/10 bg-[#FDF9F1]/40">
+                <div>
+                  <p className="text-sm font-medium text-[#08422E]">Produto ativo</p>
+                  <p className="text-xs text-[#08422E]/50">Visível para clientes na loja</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData((p) => ({ ...p, is_active: !p.is_active }))}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${
+                    formData.is_active ? "bg-[#08422E]" : "bg-[#08422E]/20"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
+                      formData.is_active ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Error */}
+              {saveError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">
+                  <AlertCircle size={15} className="shrink-0" /> {saveError}
+                </div>
+              )}
+            </div>
+
+            {/* Panel footer */}
+            <div className="flex items-center gap-3 px-6 py-4 border-t border-[#08422E]/10 bg-white">
+              <button
+                type="button"
+                onClick={closeForm}
+                className="flex-1 py-3 rounded-xl border border-[#08422E]/20 text-sm font-medium text-[#08422E] hover:bg-[#FDF9F1] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveProduct}
+                disabled={isSaving}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#08422E] text-white text-sm font-semibold py-3 rounded-xl hover:bg-[#08422E]/90 disabled:opacity-60 transition-all active:scale-[0.98]"
+              >
+                {isSaving ? (
+                  <RefreshCw size={15} className="animate-spin" />
+                ) : (
+                  <Save size={15} />
+                )}
+                {isSaving ? "Salvando…" : editingProduct ? "Salvar alterações" : "Criar produto"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

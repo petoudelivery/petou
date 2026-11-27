@@ -19,15 +19,8 @@ import {
   Check,
 } from "lucide-react";
 
-interface ProductWithImage extends Product {
-  image?: string;
-  image_url?: string;
-}
-
 const getProductImage = (product: Product): string => {
-  const item = product as ProductWithImage;
-  if (item.image) return item.image;
-  if (item.image_url) return item.image_url;
+  if (product.imageUrl) return product.imageUrl;
   switch (product.iconName) {
     case "dog-bowl":
       return "/product-dog-food.jpg";

@@ -9,7 +9,8 @@ export interface Product {
   isDemo?: boolean;
   badge?: string;
   description?: string;
-  iconName: "dog-bowl" | "cat-bowl" | "bone" | "toy" | "shampoo" | "collar";
+  iconName: string;
+  imageUrl?: string;
 }
 
 export interface CartItem {

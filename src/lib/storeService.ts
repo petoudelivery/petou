@@ -59,6 +59,7 @@ export async function fetchProducts(): Promise<Product[]> {
       badge: item.badge || undefined,
       description: item.description || "",
       iconName: item.icon_name || "dog-bowl",
+      imageUrl: item.image_url || undefined,
     }));
   } catch (err) {
     console.error("Erro ao carregar produtos do Supabase:", err);
@@ -92,6 +93,7 @@ export async function fetchProductById(id: string): Promise<Product | null> {
           badge: data.badge || undefined,
           description: data.description || "",
           iconName: data.icon_name || "dog-bowl",
+          imageUrl: data.image_url || undefined,
         };
       }
     } catch (e) {
