@@ -13,93 +13,100 @@ export default function Footer() {
   );
 
   return (
-    <footer role="contentinfo" className="bg-[#FAF8F2] border-t border-[#E8EFE5] text-[#202C27] pt-16 pb-12">
+    <footer role="contentinfo" className="bg-[#08422E] text-white">
       <h2 className="sr-only">Informações Institucionais e Rodapé</h2>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#E8EFE5]">
-          
-          {/* Column 1 & 2: Brand Info */}
-          <div className="lg:col-span-2 space-y-4">
-            <Link href="/" aria-label="Página inicial PETOU Store" className="inline-block rounded-xl focus-visible:outline-2 focus-visible:outline-[#174C3C]">
+
+      {/* Main footer body */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-white/10">
+
+          {/* Brand column */}
+          <div className="lg:col-span-2 space-y-5">
+            <Link
+              href="/"
+              aria-label="Página inicial PETOU Store"
+              className="inline-block rounded-xl focus-visible:outline-2 focus-visible:outline-[#FAB31F]"
+            >
               <div className="relative w-36 sm:w-44 h-12">
                 <Image
                   src="/petou-logo.png"
-                  alt="PETOU - Cuidado que acompanha você"
+                  alt="PETOU - Tudo para o seu pet pertinho de você"
                   fill
                   sizes="(max-width: 640px) 144px, 176px"
                   loading="lazy"
-                  className="object-contain object-left"
+                  className="object-contain object-left brightness-0 invert"
                 />
               </div>
             </Link>
-            <p className="text-sm font-semibold text-[#174C3C]">
-              Cuidado que acompanha você.
+
+            <p className="text-sm font-semibold text-[#FAB31F] tracking-wide">
+              Tudo para o seu pet pertinho de você.
             </p>
-            <p className="text-xs sm:text-sm text-[#202C27]/85 leading-relaxed max-w-sm">
-              Tudo para cuidar melhor de quem faz parte da família. Alimentos selecionados,
-              higiene e acessórios com atendimento próximo e entrega dedicada em Barcarena e região.
+
+            <p className="text-sm text-white/70 leading-relaxed max-w-sm">
+              Tudo para cuidar melhor de quem faz parte da família. Alimentos
+              selecionados, higiene e acessórios com atendimento próximo e
+              entrega dedicada em Barcarena e região.
             </p>
-            <div className="flex items-center gap-2 text-xs font-bold text-[#174C3C] pt-1">
-              <MapPin className="w-4 h-4 text-[#F47C49] shrink-0" aria-hidden="true" />
-              <span>Barcarena - Pará, Brasil</span>
+
+            <div className="flex items-center gap-2 text-sm font-medium text-white/80 pt-1">
+              <MapPin className="w-4 h-4 text-[#FAB31F] shrink-0" aria-hidden="true" />
+              <span>Barcarena — Pará, Brasil</span>
             </div>
           </div>
 
-          {/* Column 3: Categorias */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-[#174C3C] uppercase tracking-wider">
+          {/* Categorias */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-[#FAB31F] uppercase tracking-widest">
               Categorias
             </h3>
-            <ul className="space-y-2 text-xs sm:text-sm text-[#202C27]/85" aria-label="Links rápidos de categorias">
-              <li>
-                <Link href="/categoria/caes" className="hover:text-[#174C3C] transition py-1 inline-block focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded">
-                  Cães
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/gatos" className="hover:text-[#174C3C] transition py-1 inline-block focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded">
-                  Gatos
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/alimentacao" className="hover:text-[#174C3C] transition py-1 inline-block focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded">
-                  Alimentação
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/higiene" className="hover:text-[#174C3C] transition py-1 inline-block focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded">
-                  Higiene e cuidados
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/acessorios" className="hover:text-[#174C3C] transition py-1 inline-block focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded">
-                  Acessórios
-                </Link>
-              </li>
+            <ul className="space-y-2.5 text-sm text-white/70" aria-label="Links rápidos de categorias">
+              {[
+                { label: "Cães", href: "/categoria/caes" },
+                { label: "Gatos", href: "/categoria/gatos" },
+                { label: "Alimentação", href: "/categoria/alimentacao" },
+                { label: "Higiene e cuidados", href: "/categoria/higiene" },
+                { label: "Acessórios", href: "/categoria/acessorios" },
+              ].map(({ label, href }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="hover:text-white transition-colors duration-150 py-0.5 inline-block focus-visible:outline-2 focus-visible:outline-[#FAB31F] rounded"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Column 4: Navegação */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-[#174C3C] uppercase tracking-wider">
+          {/* Navegação */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-[#FAB31F] uppercase tracking-widest">
               Navegação
             </h3>
-            <ul className="space-y-2 text-xs sm:text-sm text-[#202C27]/85" aria-label="Navegação institucional">
+            <ul className="space-y-2.5 text-sm text-white/70" aria-label="Navegação institucional">
               <li>
-                <Link href="/" className="hover:text-[#174C3C] transition py-1 inline-block focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded">
+                <Link
+                  href="/"
+                  className="hover:text-white transition-colors duration-150 py-0.5 inline-block focus-visible:outline-2 focus-visible:outline-[#FAB31F] rounded"
+                >
                   Início
                 </Link>
               </li>
               <li>
-                <Link href="/#categorias" className="hover:text-[#174C3C] transition py-1 inline-block focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded">
+                <Link
+                  href="/#categorias"
+                  className="hover:text-white transition-colors duration-150 py-0.5 inline-block focus-visible:outline-2 focus-visible:outline-[#FAB31F] rounded"
+                >
                   Categorias em Destaque
                 </Link>
               </li>
               <li>
-                <Link href="/#produtos" className="hover:text-[#174C3C] transition py-1 inline-block focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded">
+                <Link
+                  href="/#produtos"
+                  className="hover:text-white transition-colors duration-150 py-0.5 inline-block focus-visible:outline-2 focus-visible:outline-[#FAB31F] rounded"
+                >
                   Escolhas para o dia a dia
                 </Link>
               </li>
@@ -108,39 +115,40 @@ export default function Footer() {
                   href={`https://wa.me/${cleanNumber}?text=${defaultMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-[#174C3C] transition inline-flex items-center gap-1 py-1 focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded"
+                  className="hover:text-white transition-colors duration-150 inline-flex items-center gap-1 py-0.5 focus-visible:outline-2 focus-visible:outline-[#FAB31F] rounded"
                 >
                   <span>Atendimento ao Tutor</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 text-[#F47C49]" aria-hidden="true" />
+                  <ArrowUpRight className="w-3.5 h-3.5 text-[#FAB31F]" aria-hidden="true" />
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Column 5: Atendimento Barcarena */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-[#174C3C] uppercase tracking-wider">
+          {/* Atendimento */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-[#FAB31F] uppercase tracking-widest">
               Atendimento Barcarena
             </h3>
-            <div className="space-y-2 text-xs text-[#202C27]/85">
-              <div className="flex items-start gap-2">
-                <Clock className="w-4 h-4 text-[#78916D] shrink-0 mt-0.5" aria-hidden="true" />
+
+            <div className="space-y-3 text-sm text-white/70">
+              <div className="flex items-start gap-2.5">
+                <Clock className="w-4 h-4 text-[#FAB31F] shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Segunda a Sábado, das 08h às 18h</span>
               </div>
-              <div className="flex items-start gap-2">
-                <Phone className="w-4 h-4 text-[#78916D] shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="flex items-start gap-2.5">
+                <Phone className="w-4 h-4 text-[#FAB31F] shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Estoque confirmado via WhatsApp</span>
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-1">
               <a
                 href={`https://wa.me/${cleanNumber}?text=${defaultMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#174C3C] text-[#FFFFFF] text-xs font-bold hover:bg-[#174C3C]/90 active:scale-95 transition shadow-sm min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#FAB31F] text-[#08422E] text-sm font-bold hover:bg-[#FAB31F]/90 active:scale-95 transition min-h-[44px] focus-visible:outline-2 focus-visible:outline-white shadow-md"
               >
-                <MessageCircle className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
+                <MessageCircle className="w-4 h-4" aria-hidden="true" />
                 <span>Falar no WhatsApp</span>
               </a>
             </div>
@@ -148,15 +156,14 @@ export default function Footer() {
 
         </div>
 
-        {/* Bottom Bar: Copyright & Note */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#66716A]">
-          <p>© 2026 PETOU Store. Todos os direitos reservados. Barcarena - PA.</p>
-          <p className="flex items-center gap-1.5 font-medium text-[#202C27]/85">
-            <span>Cuidado que acompanha você</span>
-            <Heart className="w-3.5 h-3.5 text-[#F47C49] fill-[#F47C49]" aria-hidden="true" />
+        {/* Bottom bar */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/40">
+          <p>© 2026 PETOU Store. Todos os direitos reservados. Barcarena — PA.</p>
+          <p className="flex items-center gap-1.5 font-medium text-white/60">
+            <span>Tudo para o seu pet pertinho de você</span>
+            <Heart className="w-3.5 h-3.5 text-[#FAB31F] fill-[#FAB31F]" aria-hidden="true" />
           </p>
         </div>
-
       </div>
     </footer>
   );

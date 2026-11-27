@@ -98,7 +98,7 @@ export default function Header({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
-          
+
           {/* Left: PETOU paw logo + Tagline */}
           <div className="flex items-center gap-3 shrink-0">
             <Link
@@ -119,7 +119,7 @@ export default function Header({
             </Link>
             <div className="hidden xl:block h-6 w-px bg-[#E8EFE5]" aria-hidden="true" />
             <span className="hidden xl:block text-xs font-medium text-[#66716A]">
-              Cuidado que acompanha você.
+              Tudo para o seu pet pertinho de você.
             </span>
           </div>
 
@@ -133,11 +133,10 @@ export default function Header({
                   key={item.name}
                   type="button"
                   onClick={() => handleNavClick(item.category, item.slug)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-all min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${
-                    isActive
-                      ? "bg-[#174C3C] text-[#FFFFFF] shadow-sm"
-                      : "text-[#202C27] hover:text-[#174C3C] hover:bg-[#E8EFE5]/70"
-                  }`}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-all min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${isActive
+                    ? "bg-[#174C3C] text-[#FFFFFF] shadow-sm"
+                    : "text-[#202C27] hover:text-[#174C3C] hover:bg-[#E8EFE5]/70"
+                    }`}
                   aria-current={isActive ? "page" : undefined}
                 >
                   <Icon className="w-4 h-4 stroke-[1.8]" aria-hidden="true" />
@@ -185,9 +184,8 @@ export default function Header({
             <button
               type="button"
               onClick={handleOpenCart}
-              aria-label={`Abrir carrinho com ${effectiveCartCount} ${
-                effectiveCartCount === 1 ? "item" : "itens"
-              }`}
+              aria-label={`Abrir carrinho com ${effectiveCartCount} ${effectiveCartCount === 1 ? "item" : "itens"
+                }`}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#174C3C] text-[#FFFFFF] hover:bg-[#174C3C]/90 active:scale-95 transition-all shadow-md shadow-[#174C3C]/15 min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] focus-visible:outline-offset-2"
             >
               <ShoppingBag className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
@@ -269,17 +267,15 @@ export default function Header({
                       key={item.name}
                       type="button"
                       onClick={() => handleNavClick(item.category, item.slug)}
-                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-left text-sm font-semibold transition min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${
-                        isActive
-                          ? "bg-[#174C3C] text-[#FFFFFF]"
-                          : "bg-[#FFFFFF] text-[#202C27] border border-[#E8EFE5] hover:bg-[#E8EFE5]"
-                      }`}
+                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-left text-sm font-semibold transition min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${isActive
+                        ? "bg-[#174C3C] text-[#FFFFFF]"
+                        : "bg-[#FFFFFF] text-[#202C27] border border-[#E8EFE5] hover:bg-[#E8EFE5]"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <span
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                            isActive ? "bg-[#FFFFFF]/20 text-[#FFFFFF]" : "bg-[#E8EFE5] text-[#174C3C]"
-                          }`}
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center ${isActive ? "bg-[#FFFFFF]/20 text-[#FFFFFF]" : "bg-[#E8EFE5] text-[#174C3C]"
+                            }`}
                           aria-hidden="true"
                         >
                           <Icon className="w-4 h-4 stroke-[2]" />
@@ -306,7 +302,7 @@ export default function Header({
               </a>
 
               <p className="text-center text-xs text-[#66716A]">
-                Cuidado que acompanha você • Barcarena - PA
+                Tudo para o seu pet pertinho de você • Barcarena - PA
               </p>
             </div>
           </div>

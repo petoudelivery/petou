@@ -181,7 +181,7 @@ export default function CartDrawer() {
     ].join("\n");
 
     const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
-    
+
     // Do NOT clear cart on failed navigation
     window.open(url, "_blank");
   };
@@ -209,7 +209,7 @@ export default function CartDrawer() {
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
         <div className="w-screen max-w-lg bg-[#FAF8F2] shadow-2xl flex flex-col border-l border-[#E8EFE5]">
-          
+
           {/* Header */}
           <div className="p-5 sm:p-6 bg-[#FFFFFF] border-b border-[#E8EFE5] flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
@@ -246,7 +246,7 @@ export default function CartDrawer() {
 
           {/* Scrollable Container */}
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-            
+
             {/* Items List */}
             {items.length === 0 ? (
               <div className="py-12 flex flex-col items-center justify-center text-center text-[#66716A] space-y-3">
@@ -365,7 +365,7 @@ export default function CartDrawer() {
             {/* Delivery & Payment Form */}
             {items.length > 0 && (
               <form onSubmit={handleCheckout} id="checkout-form" className="space-y-4 pt-2">
-                
+
                 {/* Section 1: Customer & Address */}
                 <div className="space-y-3 p-4 rounded-2xl bg-[#FFFFFF] border border-[#E8EFE5] shadow-sm">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#174C3C]">
@@ -453,11 +453,10 @@ export default function CartDrawer() {
                   <div className="grid grid-cols-3 gap-2">
                     {/* Pix */}
                     <label
-                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${
-                        paymentMethod === "Pix"
+                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${paymentMethod === "Pix"
                           ? "bg-[#174C3C] text-[#FFFFFF] border-[#174C3C] shadow-sm"
                           : "bg-[#FAF8F2] text-[#202C27] border-[#E8EFE5] hover:border-[#78916D]"
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -473,11 +472,10 @@ export default function CartDrawer() {
 
                     {/* Dinheiro */}
                     <label
-                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${
-                        paymentMethod === "Dinheiro"
+                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${paymentMethod === "Dinheiro"
                           ? "bg-[#174C3C] text-[#FFFFFF] border-[#174C3C] shadow-sm"
                           : "bg-[#FAF8F2] text-[#202C27] border-[#E8EFE5] hover:border-[#78916D]"
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -493,11 +491,10 @@ export default function CartDrawer() {
 
                     {/* Cartão */}
                     <label
-                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${
-                        paymentMethod === "Cartão"
+                      className={`cursor-pointer p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition min-h-[64px] focus-within:ring-2 focus-within:ring-[#174C3C] ${paymentMethod === "Cartão"
                           ? "bg-[#174C3C] text-[#FFFFFF] border-[#174C3C] shadow-sm"
                           : "bg-[#FAF8F2] text-[#202C27] border-[#E8EFE5] hover:border-[#78916D]"
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -554,7 +551,7 @@ export default function CartDrawer() {
           {/* Sticky Drawer Footer with Totals and Submit */}
           {items.length > 0 && (
             <div className="p-5 sm:p-6 bg-[#FFFFFF] border-t border-[#E8EFE5] shrink-0 space-y-3.5">
-              
+
               {/* Financial Breakdown */}
               <div className="space-y-1.5 text-xs text-[#202C27]">
                 <div className="flex justify-between">
