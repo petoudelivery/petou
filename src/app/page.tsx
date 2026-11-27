@@ -726,49 +726,62 @@ export default function Home() {
 
         {/* =========================================================================
             7. ASSISTANCE BANNER
+            Redesigned WhatsApp Support Section:
+            - Official PETOU palette: #08422E main visual anchor, #FDF9F1, #FFFFFF, #FAB31F accent
+            - Refined composition with strong headline, welcoming copy and clear WhatsApp CTA
+            - Preserves exact WhatsApp number, URL and click behavior
            ========================================================================= */}
-        <section aria-labelledby="assistance-heading" className="py-14 sm:py-16 bg-[#FAF8F2]">
+        <section aria-labelledby="assistance-heading" className="py-16 sm:py-20 bg-[#FDF9F1]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="rounded-[2.5rem] bg-[#E8EFE5] border border-[#78916D]/30 p-8 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="relative rounded-[2.5rem] bg-[#08422E] text-[#FFFFFF] p-8 sm:p-12 lg:p-16 shadow-2xl overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-10">
 
-              {/* Left Side: Chat-paw icon + Vertical Divider + Copy */}
-              <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+              {/* Decorative subtle ambient glows */}
+              <div
+                className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#FAB31F]/10 blur-3xl pointer-events-none"
+                aria-hidden="true"
+              />
+              <div
+                className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[#FFFFFF]/5 blur-2xl pointer-events-none"
+                aria-hidden="true"
+              />
 
-                {/* Chat-Paw Icon */}
-                <div className="w-16 h-16 rounded-2xl bg-[#174C3C] text-[#FAF8F2] flex items-center justify-center shrink-0 shadow-md" aria-hidden="true">
-                  <div className="relative">
-                    <MessageCircle className="w-8 h-8 stroke-[1.8]" />
-                    <span className="absolute -top-1 -right-1 text-sm select-none">🐾</span>
-                  </div>
+              {/* Left Side: Badge + Strong Headline + Supporting Text */}
+              <div className="relative z-10 text-center lg:text-left max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFFFF]/10 border border-[#FFFFFF]/15 text-[#FDF9F1] text-xs font-bold tracking-wide mb-4">
+                  <span className="w-2 h-2 rounded-full bg-[#FAB31F]" aria-hidden="true" />
+                  <span>Atendimento Próximo & Humanizado</span>
                 </div>
 
-                {/* Vertical Divider */}
-                <div className="hidden sm:block h-12 w-px bg-[#78916D]/30" aria-hidden="true" />
+                <h2
+                  id="assistance-heading"
+                  className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#FFFFFF] tracking-tight leading-[1.15]"
+                >
+                  Precisa de ajuda para escolher?
+                </h2>
 
-                {/* Copy */}
-                <div>
-                  <h2 id="assistance-heading" className="text-2xl sm:text-3xl font-black text-[#174C3C] tracking-tight">
-                    Precisa de ajuda para escolher?
-                  </h2>
-                  <p className="text-sm sm:text-base text-[#66716A] mt-1 font-medium">
-                    Nossa equipe está pronta para te atender!
-                  </p>
-                </div>
+                <p className="text-sm sm:text-base text-[#FDF9F1]/85 mt-3 leading-relaxed">
+                  Nossa equipe está pronta para te atender! Converse diretamente conosco para tirar dúvidas sobre rações, cuidados e entregas em Barcarena.
+                </p>
               </div>
 
-              {/* Right Side: Dark green pill button "Converse com a PETOU" */}
-              <div className="shrink-0 w-full sm:w-auto">
+              {/* Right Side: Prominent WhatsApp CTA Button */}
+              <div className="relative z-10 shrink-0 w-full sm:w-auto flex flex-col items-center sm:items-end">
                 <a
                   href={`https://wa.me/${cleanNumber}?text=${encodeURIComponent(
                     "Olá, equipe PETOU! Preciso de ajuda para escolher o melhor produto para meu pet em Barcarena."
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-[#174C3C] text-[#FFFFFF] font-bold text-sm hover:bg-[#174C3C]/90 active:scale-95 transition-all shadow-lg shadow-[#174C3C]/20 min-h-[48px] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4.5 sm:py-5 rounded-full bg-[#FAB31F] text-[#08422E] hover:bg-[#FAB31F]/90 active:scale-95 font-black text-sm sm:text-base transition-all shadow-xl shadow-[#FAB31F]/20 min-h-[52px] focus-visible:outline-2 focus-visible:outline-[#FFFFFF] text-center"
                 >
-                  <MessageCircle className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
+                  <MessageCircle className="w-5 h-5 fill-current" aria-hidden="true" />
                   <span>Converse com a PETOU</span>
+                  <ArrowRight className="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
                 </a>
+
+                <span className="text-[11px] font-semibold text-[#FDF9F1]/70 mt-2 text-center sm:text-right">
+                  Atendimento direto pelo WhatsApp em Barcarena
+                </span>
               </div>
 
             </div>
