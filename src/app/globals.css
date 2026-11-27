@@ -1,31 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAF8F2;
+  --background: #FDF9F1;
   --foreground: #202C27;
-  --petou-dark-green: #174C3C;
+  --petou-green: #08422E;
+  --petou-yellow: #FAB31F;
+  --petou-cream: #FDF9F1;
+  --petou-white: #FFFFFF;
+  /* legacy aliases kept for backward compat */
+  --petou-dark-green: #08422E;
   --petou-sage: #78916D;
   --petou-soft-green: #E8EFE5;
-  --petou-cream: #FAF8F2;
-  --petou-white: #FFFFFF;
-  --petou-coral: #F47C49;
+  --petou-coral: #FAB31F;
   --petou-text-dark: #202C27;
   --petou-text-muted: #66716A;
-  --petou-green: #174C3C;
-  --petou-yellow: #FAB31F;
 }
 
 @theme {
-  --color-petou-dark-green: #174C3C;
+  --color-petou-green: #08422E;
+  --color-petou-yellow: #FAB31F;
+  --color-petou-cream: #FDF9F1;
+  --color-petou-white: #FFFFFF;
+  /* legacy aliases kept for backward compat */
+  --color-petou-dark-green: #08422E;
   --color-petou-sage: #78916D;
   --color-petou-soft-green: #E8EFE5;
-  --color-petou-cream: #FAF8F2;
-  --color-petou-white: #FFFFFF;
-  --color-petou-coral: #F47C49;
+  --color-petou-coral: #FAB31F;
   --color-petou-text-dark: #202C27;
   --color-petou-text-muted: #66716A;
-  --color-petou-green: #174C3C;
-  --color-petou-yellow: #FAB31F;
   --font-sans: var(--font-manrope), var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-manrope), sans-serif;
   --font-body: var(--font-dm-sans), sans-serif;
@@ -43,7 +45,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* WCAG 2.2 AA Focus Indicators */
 :focus-visible {
-  outline: 2px solid var(--petou-dark-green);
+  outline: 2px solid var(--petou-green);
   outline-offset: 2px;
 }
 

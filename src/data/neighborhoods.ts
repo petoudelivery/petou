@@ -1,14 +1,16 @@
 import { Neighborhood } from "@/types/store";
 
 export const BARCARENA_NEIGHBORHOODS: Neighborhood[] = [
-  { id: "vila-dos-cabanos", name: "Vila dos Cabanos", fee: 7.0 },
-  { id: "centro", name: "Centro (Barcarena Sede)", fee: 10.0 },
-  { id: "cafezal", name: "Cafezal", fee: 8.0 },
-  { id: "vila-do-conde", name: "Vila do Conde", fee: 12.0 },
-  { id: "murucupi", name: "Murucupi", fee: 8.0 },
-  { id: "itupanema", name: "Itupanema", fee: 12.0 },
-  { id: "pioneiro", name: "Pioneiro", fee: 8.0 },
-  { id: "laranjal", name: "Laranjal", fee: 8.0 },
-  { id: "aguas-verdes", name: "Águas Verdes", fee: 8.0 },
-  { id: "a-confirmar", name: "Outro bairro em Barcarena (A confirmar)", fee: null },
+  { id: "centro", name: "Centro (Barcarena-Sede)", fee: 8.0 },
+  { id: "comercial", name: "Bairro Comercial", fee: 12.0 },
+  { id: "cafezal", name: "Bairro Cafezal", fee: 12.0 },
+  { id: "imobiliaria", name: "Bairro Imobiliária", fee: 12.0 },
+  { id: "novo", name: "Bairro Novo", fee: 12.0 },
+  { id: "novo-i", name: "Bairro Novo I", fee: 12.0 },
+  { id: "novo-ii", name: "Bairro Novo II", fee: 12.0 },
+  { id: "betania", name: "Bairro Betânia", fee: 12.0 },
+  { id: "pedreira", name: "Bairro Pedreira", fee: 12.0 },
+  { id: "zita-cunha", name: "Bairro Zita Cunha", fee: 12.0 },
+  { id: "xavier", name: "Bairro Xavier", fee: 12.0 },
+  { id: "barbolandia", name: "Bairro Barbolândia", fee: 12.0 },
 ];

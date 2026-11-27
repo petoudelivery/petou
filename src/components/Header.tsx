@@ -87,10 +87,10 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#FAF8F2]/95 backdrop-blur-md border-b border-[#E8EFE5] transition-all">
+    <header className="sticky top-0 z-40 w-full bg-[#FDF9F1]/95 backdrop-blur-md border-b border-[#08422E]/10 transition-all">
       {/* Top Announcement Bar */}
-      <aside aria-label="Aviso de entrega" className="bg-[#174C3C] text-[#FAF8F2] text-xs py-2 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2">
-        <Truck className="w-3.5 h-3.5 text-[#F47C49]" aria-hidden="true" />
+      <aside aria-label="Aviso de entrega" className="bg-[#08422E] text-[#FDF9F1] text-xs py-2 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2">
+        <Truck className="w-3.5 h-3.5 text-[#FAB31F]" aria-hidden="true" />
         <span>
           Entrega local em Barcarena • <strong>Consulte disponibilidade</strong>
         </span>
@@ -99,12 +99,12 @@ export default function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
 
-          {/* Left: PETOU paw logo + Tagline */}
+          {/* Left: logo + Tagline */}
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/"
               aria-label="Página inicial Petou Store"
-              className="flex items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+              className="flex items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-[#08422E]"
             >
               <div className="relative w-32 sm:w-36 h-10">
                 <Image
@@ -117,7 +117,7 @@ export default function Header({
                 />
               </div>
             </Link>
-            <div className="hidden xl:block h-6 w-px bg-[#E8EFE5]" aria-hidden="true" />
+            <div className="hidden xl:block h-6 w-px bg-[#08422E]/15" aria-hidden="true" />
             <span className="hidden xl:block text-xs font-medium text-[#66716A]">
               Tudo para o seu pet pertinho de você.
             </span>
@@ -133,9 +133,9 @@ export default function Header({
                   key={item.name}
                   type="button"
                   onClick={() => handleNavClick(item.category, item.slug)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-all min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${isActive
-                    ? "bg-[#174C3C] text-[#FFFFFF] shadow-sm"
-                    : "text-[#202C27] hover:text-[#174C3C] hover:bg-[#E8EFE5]/70"
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-all min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#08422E] ${isActive
+                    ? "bg-[#08422E] text-[#FFFFFF] shadow-sm"
+                    : "text-[#202C27] hover:text-[#08422E] hover:bg-[#08422E]/8"
                     }`}
                   aria-current={isActive ? "page" : undefined}
                 >
@@ -159,12 +159,12 @@ export default function Header({
                 value={currentQuery}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar produtos..."
-                className="w-full bg-[#FFFFFF] text-[#202C27] placeholder-[#66716A]/75 text-xs sm:text-sm rounded-full pl-9 pr-7 py-2.5 border border-[#E8EFE5] focus-visible:outline-2 focus-visible:outline-[#174C3C] transition shadow-sm min-h-[44px]"
+                className="w-full bg-[#FFFFFF] text-[#202C27] placeholder-[#66716A]/75 text-xs sm:text-sm rounded-full pl-9 pr-7 py-2.5 border border-[#08422E]/15 focus-visible:outline-2 focus-visible:outline-[#08422E] transition shadow-sm min-h-[44px]"
               />
               <button
                 type="submit"
                 aria-label="Executar pesquisa de produtos"
-                className="absolute left-3 top-3 text-[#66716A] hover:text-[#174C3C] focus-visible:outline-2 focus-visible:outline-[#174C3C] rounded"
+                className="absolute left-3 top-3 text-[#66716A] hover:text-[#08422E] focus-visible:outline-2 focus-visible:outline-[#08422E] rounded"
               >
                 <Search className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -173,24 +173,24 @@ export default function Header({
                   type="button"
                   onClick={() => setQuery("")}
                   aria-label="Limpar termo de busca"
-                  className="absolute right-2.5 top-2.5 text-[#66716A] hover:text-[#202C27] text-xs font-bold p-1 rounded focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                  className="absolute right-2.5 top-2.5 text-[#66716A] hover:text-[#202C27] text-xs font-bold p-1 rounded focus-visible:outline-2 focus-visible:outline-[#08422E]"
                 >
                   ✕
                 </button>
               )}
             </form>
 
-            {/* Dark green cart button */}
+            {/* Cart button */}
             <button
               type="button"
               onClick={handleOpenCart}
               aria-label={`Abrir carrinho com ${effectiveCartCount} ${effectiveCartCount === 1 ? "item" : "itens"
                 }`}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#174C3C] text-[#FFFFFF] hover:bg-[#174C3C]/90 active:scale-95 transition-all shadow-md shadow-[#174C3C]/15 min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] focus-visible:outline-offset-2"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#08422E] text-[#FFFFFF] hover:bg-[#08422E]/90 active:scale-95 transition-all shadow-md shadow-[#08422E]/15 min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#08422E] focus-visible:outline-offset-2"
             >
-              <ShoppingBag className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
+              <ShoppingBag className="w-4 h-4 text-[#FAB31F]" aria-hidden="true" />
               <span className="text-xs sm:text-sm font-bold hidden md:inline">Carrinho</span>
-              <span className="w-5 h-5 rounded-full bg-[#F47C49] text-[#FFFFFF] text-[11px] font-black flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-[#FAB31F] text-[#08422E] text-[11px] font-black flex items-center justify-center">
                 {effectiveCartCount}
               </span>
             </button>
@@ -202,7 +202,7 @@ export default function Header({
               aria-label={mobileMenuOpen ? "Fechar menu principal" : "Abrir menu principal"}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation-menu"
-              className="lg:hidden p-2.5 rounded-2xl text-[#174C3C] hover:bg-[#E8EFE5] min-w-[44px] min-h-[44px] flex items-center justify-center transition focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+              className="lg:hidden p-2.5 rounded-2xl text-[#08422E] hover:bg-[#08422E]/8 min-w-[44px] min-h-[44px] flex items-center justify-center transition focus-visible:outline-2 focus-visible:outline-[#08422E]"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
             </button>
@@ -221,12 +221,12 @@ export default function Header({
               value={currentQuery}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar produtos..."
-              className="w-full bg-[#FFFFFF] text-[#202C27] placeholder-[#66716A]/75 text-xs rounded-full pl-9 pr-7 py-2.5 border border-[#E8EFE5] focus-visible:outline-2 focus-visible:outline-[#174C3C] min-h-[44px]"
+              className="w-full bg-[#FFFFFF] text-[#202C27] placeholder-[#66716A]/75 text-xs rounded-full pl-9 pr-7 py-2.5 border border-[#08422E]/15 focus-visible:outline-2 focus-visible:outline-[#08422E] min-h-[44px]"
             />
             <button
               type="submit"
               aria-label="Executar pesquisa"
-              className="absolute left-3 top-3 text-[#66716A] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+              className="absolute left-3 top-3 text-[#66716A] focus-visible:outline-2 focus-visible:outline-[#08422E]"
             >
               <Search className="w-4 h-4" aria-hidden="true" />
             </button>
@@ -235,7 +235,7 @@ export default function Header({
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label="Limpar termo de busca"
-                className="absolute right-2.5 top-2.5 text-[#66716A] text-xs p-1 focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                className="absolute right-2.5 top-2.5 text-[#66716A] text-xs p-1 focus-visible:outline-2 focus-visible:outline-[#08422E]"
               >
                 ✕
               </button>
@@ -251,7 +251,7 @@ export default function Header({
           role="dialog"
           aria-modal="true"
           aria-label="Menu principal de navegação"
-          className="lg:hidden fixed inset-x-0 top-[116px] bottom-0 bg-[#FAF8F2] z-50 overflow-y-auto overflow-x-hidden border-t border-[#E8EFE5] p-6 shadow-2xl"
+          className="lg:hidden fixed inset-x-0 top-[116px] bottom-0 bg-[#FDF9F1] z-50 overflow-y-auto overflow-x-hidden border-t border-[#08422E]/10 p-6 shadow-2xl"
         >
           <div className="max-w-md mx-auto space-y-6">
             <div>
@@ -267,14 +267,14 @@ export default function Header({
                       key={item.name}
                       type="button"
                       onClick={() => handleNavClick(item.category, item.slug)}
-                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-left text-sm font-semibold transition min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${isActive
-                        ? "bg-[#174C3C] text-[#FFFFFF]"
-                        : "bg-[#FFFFFF] text-[#202C27] border border-[#E8EFE5] hover:bg-[#E8EFE5]"
+                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-left text-sm font-semibold transition min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#08422E] ${isActive
+                        ? "bg-[#08422E] text-[#FFFFFF]"
+                        : "bg-[#FFFFFF] text-[#202C27] border border-[#08422E]/10 hover:bg-[#FDF9F1]"
                         }`}
                     >
                       <div className="flex items-center gap-3">
                         <span
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center ${isActive ? "bg-[#FFFFFF]/20 text-[#FFFFFF]" : "bg-[#E8EFE5] text-[#174C3C]"
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center ${isActive ? "bg-[#FFFFFF]/20 text-[#FFFFFF]" : "bg-[#FDF9F1] text-[#08422E]"
                             }`}
                           aria-hidden="true"
                         >
@@ -289,15 +289,15 @@ export default function Header({
               </nav>
             </div>
 
-            <div className="pt-4 border-t border-[#E8EFE5] space-y-3">
+            <div className="pt-4 border-t border-[#08422E]/10 space-y-3">
               <a
                 href={`https://wa.me/${cleanNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-[#174C3C] text-[#FFFFFF] text-sm font-bold shadow-md min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C]"
+                className="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-[#08422E] text-[#FFFFFF] text-sm font-bold shadow-md min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#08422E]"
               >
-                <MessageCircle className="w-4 h-4 text-[#F47C49]" aria-hidden="true" />
+                <MessageCircle className="w-4 h-4 text-[#FAB31F]" aria-hidden="true" />
                 <span>Atendimento WhatsApp Barcarena</span>
               </a>
 
