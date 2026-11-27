@@ -237,42 +237,77 @@ export default function Home() {
         </section>
 
         {/* =========================================================================
-            4. TRUST STRIP
+            4. BENEFITS STRIP
+            Redesigned Compact, Elegant Horizontal Benefits Strip:
+            - Official PETOU palette: #08422E, #FAB31F, #FDF9F1, #FFFFFF
+            - 4 existing store benefits in a single horizontal row on desktop
+            - Simple, consistent icons and short, easy-to-understand text
+            - Balanced spacing and clean mobile responsiveness
            ========================================================================= */}
-        <section aria-label="Compromissos e diferenciais da PETOU Store" className="bg-[#FFFFFF] border-b border-[#E8EFE5] py-6 sm:py-8">
+        <section
+          aria-label="Benefícios e diferenciais da PETOU Store"
+          className="bg-[#FFFFFF] border-b border-[#08422E]/10 py-5 sm:py-6"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#E8EFE5] gap-4 md:gap-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-0 lg:divide-x lg:divide-[#08422E]/10">
 
-              {/* Item 1: Atendimento próximo */}
-              <div className="flex items-center justify-center gap-3.5 py-3 md:py-2 px-4 text-center md:text-left">
-                <div className="w-11 h-11 rounded-2xl bg-[#E8EFE5] text-[#174C3C] flex items-center justify-center shrink-0" aria-hidden="true">
+              {/* Benefit 1: Praticidade */}
+              <div className="flex items-center gap-3.5 py-2 px-3 sm:px-4 lg:justify-center">
+                <div
+                  className="w-11 h-11 rounded-2xl bg-[#FDF9F1] border border-[#08422E]/10 text-[#08422E] flex items-center justify-center shrink-0 shadow-sm relative"
+                  aria-hidden="true"
+                >
+                  <MessageCircle className="w-5 h-5 stroke-[1.8]" />
+                  <span className="w-2 h-2 rounded-full bg-[#FAB31F] absolute top-1.5 right-1.5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Praticidade total</h3>
+                  <p className="text-xs text-[#202C27]/75">Peça em segundos pelo celular</p>
+                </div>
+              </div>
+
+              {/* Benefit 2: Atendimento no WhatsApp */}
+              <div className="flex items-center gap-3.5 py-2 px-3 sm:px-4 lg:justify-center">
+                <div
+                  className="w-11 h-11 rounded-2xl bg-[#FDF9F1] border border-[#08422E]/10 text-[#08422E] flex items-center justify-center shrink-0 shadow-sm relative"
+                  aria-hidden="true"
+                >
                   <HeartHandshake className="w-5 h-5 stroke-[1.8]" />
+                  <span className="w-2 h-2 rounded-full bg-[#FAB31F] absolute top-1.5 right-1.5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#174C3C]">Atendimento próximo</h3>
-                  <p className="text-xs text-[#66716A]">Suporte humanizado direto via WhatsApp</p>
+                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Atendimento próximo</h3>
+                  <p className="text-xs text-[#202C27]/75">Suporte humanizado no WhatsApp</p>
                 </div>
               </div>
 
-              {/* Item 2: Estoque confirmado */}
-              <div className="flex items-center justify-center gap-3.5 py-3 md:py-2 px-4 text-center md:text-left">
-                <div className="w-11 h-11 rounded-2xl bg-[#E8EFE5] text-[#174C3C] flex items-center justify-center shrink-0" aria-hidden="true">
-                  <CheckCircle2 className="w-5 h-5 stroke-[1.8]" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-[#174C3C]">Estoque confirmado</h3>
-                  <p className="text-xs text-[#66716A]">Itens checados antes de enviar seu pedido</p>
-                </div>
-              </div>
-
-              {/* Item 3: Entrega local */}
-              <div className="flex items-center justify-center gap-3.5 py-3 md:py-2 px-4 text-center md:text-left">
-                <div className="w-11 h-11 rounded-2xl bg-[#E8EFE5] text-[#174C3C] flex items-center justify-center shrink-0" aria-hidden="true">
+              {/* Benefit 3: Entrega em Barcarena */}
+              <div className="flex items-center gap-3.5 py-2 px-3 sm:px-4 lg:justify-center">
+                <div
+                  className="w-11 h-11 rounded-2xl bg-[#FDF9F1] border border-[#08422E]/10 text-[#08422E] flex items-center justify-center shrink-0 shadow-sm relative"
+                  aria-hidden="true"
+                >
                   <Truck className="w-5 h-5 stroke-[1.8]" />
+                  <span className="w-2 h-2 rounded-full bg-[#FAB31F] absolute top-1.5 right-1.5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#174C3C]">Entrega local</h3>
-                  <p className="text-xs text-[#66716A]">Agilidade na sua porta em Barcarena</p>
+                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Entrega em Barcarena</h3>
+                  <p className="text-xs text-[#202C27]/75">Agilidade direto na sua porta</p>
+                </div>
+              </div>
+
+              {/* Benefit 4: Estoque confirmado */}
+              <div className="flex items-center gap-3.5 py-2 px-3 sm:px-4 lg:justify-center">
+                <div
+                  className="w-11 h-11 rounded-2xl bg-[#FDF9F1] border border-[#08422E]/10 text-[#08422E] flex items-center justify-center shrink-0 shadow-sm relative"
+                  aria-hidden="true"
+                >
+                  <CheckCircle2 className="w-5 h-5 stroke-[1.8]" />
+                  <span className="w-2 h-2 rounded-full bg-[#FAB31F] absolute top-1.5 right-1.5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Estoque confirmado</h3>
+                  <p className="text-xs text-[#202C27]/75">Itens validados antes do envio</p>
                 </div>
               </div>
 
