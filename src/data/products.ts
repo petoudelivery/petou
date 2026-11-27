@@ -16,7 +16,7 @@ export const DEMO_PRODUCTS: Product[] = [
   {
     id: "demo-1",
     name: "Ração premium para cães",
-    brand: "PETOU",
+    brand: "Petou",
     size: "1 kg",
     price: 100.0,
     formattedPrice: "R$ 100,00",
@@ -29,7 +29,7 @@ export const DEMO_PRODUCTS: Product[] = [
   {
     id: "demo-2",
     name: "Ração premium para gatos",
-    brand: "PETOU",
+    brand: "Petou",
     size: "1 kg",
     price: 90.0,
     formattedPrice: "R$ 90,00",
@@ -42,7 +42,7 @@ export const DEMO_PRODUCTS: Product[] = [
   {
     id: "demo-3",
     name: "Biscoito natural para cães",
-    brand: "PETOU",
+    brand: "Petou",
     size: "1 kg",
     price: 15.0,
     formattedPrice: "R$ 15,00",
@@ -55,7 +55,7 @@ export const DEMO_PRODUCTS: Product[] = [
   {
     id: "demo-4",
     name: "Brinquedo mordedor",
-    brand: "PETOU",
+    brand: "Petou",
     size: "Tamanho único",
     price: 25.0,
     formattedPrice: "R$ 25,00",
@@ -68,7 +68,7 @@ export const DEMO_PRODUCTS: Product[] = [
   {
     id: "demo-5",
     name: "Shampoo suave para pets",
-    brand: "PETOU",
+    brand: "Petou",
     size: "300 ml",
     price: 30.0,
     formattedPrice: "R$ 30,00",
@@ -81,7 +81,7 @@ export const DEMO_PRODUCTS: Product[] = [
   {
     id: "demo-6",
     name: "Coleira confortável",
-    brand: "PETOU",
+    brand: "Petou",
     size: "Tamanho único",
     price: 35.0,
     formattedPrice: "R$ 35,00",

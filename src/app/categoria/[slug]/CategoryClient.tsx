@@ -117,9 +117,9 @@ export default function CategoryClient({ params }: CategoryClientProps) {
     <div className="min-h-screen flex flex-col bg-[#FAF8F2] text-[#202C27] font-sans antialiased">
       <Header
         selectedCategory="Todos"
-        onSelectCategory={() => {}}
+        onSelectCategory={() => { }}
         searchQuery=""
-        onSearchChange={() => {}}
+        onSearchChange={() => { }}
       />
 
       <main className="flex-1 py-8 sm:py-12">
@@ -312,11 +312,10 @@ export default function CategoryClient({ params }: CategoryClientProps) {
                           type="button"
                           onClick={(e) => handleAddToCart(product, e)}
                           aria-label={`Adicionar ${product.name} ao carrinho`}
-                          className={`inline-flex items-center justify-center p-3 rounded-full transition shadow-sm min-w-[44px] min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${
-                            isAdded
+                          className={`inline-flex items-center justify-center p-3 rounded-full transition shadow-sm min-w-[44px] min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#174C3C] ${isAdded
                               ? "bg-[#78916D] text-[#FFFFFF]"
                               : "bg-[#174C3C] hover:bg-[#174C3C]/90 text-[#FFFFFF] active:scale-95"
-                          }`}
+                            }`}
                         >
                           {isAdded ? (
                             <Check className="w-4 h-4 stroke-[2.5]" aria-hidden="true" />

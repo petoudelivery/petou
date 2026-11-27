@@ -9,7 +9,7 @@ export default function Footer() {
   const cleanNumber = whatsappNumber.replace(/\D/g, "");
 
   const defaultMessage = encodeURIComponent(
-    "Olá, equipe PETOU! Gostaria de tirar dúvidas sobre produtos e entregas em Barcarena."
+    "Olá, equipe Petou! Gostaria de tirar dúvidas sobre produtos e entregas em Barcarena."
   );
 
   return (
@@ -24,7 +24,7 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-5">
             <Link
               href="/"
-              aria-label="Página inicial PETOU Store"
+              aria-label="Página inicial Petou Store"
               className="inline-block rounded-xl focus-visible:outline-2 focus-visible:outline-[#FAB31F]"
             >
               <div className="relative w-36 sm:w-44 h-12">
@@ -57,7 +57,7 @@ export default function Footer() {
 
           {/* Categorias */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-[#FAB31F] uppercase tracking-widest">
+            <h3 className="text-xs font-bold text-[#FAB31F] tracking-widest">
               Categorias
             </h3>
             <ul className="space-y-2.5 text-sm text-white/70" aria-label="Links rápidos de categorias">
@@ -82,7 +82,7 @@ export default function Footer() {
 
           {/* Navegação */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-[#FAB31F] uppercase tracking-widest">
+            <h3 className="text-xs font-bold text-[#FAB31F] tracking-widest">
               Navegação
             </h3>
             <ul className="space-y-2.5 text-sm text-white/70" aria-label="Navegação institucional">
@@ -126,7 +126,7 @@ export default function Footer() {
 
           {/* Atendimento */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-[#FAB31F] uppercase tracking-widest">
+            <h3 className="text-xs font-bold text-[#FAB31F] tracking-widest">
               Atendimento Barcarena
             </h3>
 

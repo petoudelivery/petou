@@ -162,7 +162,7 @@ export default function CartDrawer() {
 
     // Compose PT-BR WhatsApp Summary
     const message = [
-      `🐾 *NOVO PEDIDO - PETOU STORE (BARCARENA)*`,
+      `🐾 *NOVO PEDIDO - Petou Store (Barcarena)*`,
       `----------------------------------------------`,
       `👤 *Cliente:* ${fullName.trim()}`,
       `📍 *Endereço:* ${streetAddress.trim()}`,
@@ -218,7 +218,7 @@ export default function CartDrawer() {
               </div>
               <div>
                 <h2 id="cart-drawer-heading" className="text-lg font-black text-[#174C3C]">
-                  Seu Carrinho PETOU
+                  Seu Carrinho Petou
                 </h2>
                 <p className="text-xs text-[#66716A]">
                   {totalCount} {totalCount === 1 ? "item selecionado" : "itens selecionados"}
@@ -268,8 +268,8 @@ export default function CartDrawer() {
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center justify-between pb-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#66716A]">
-                    Itens no Carrinho
+                  <span className="text-[11px] font-bold tracking-wider text-[#66716A]">
+                    Itens no carrinho
                   </span>
                   <button
                     type="button"
@@ -306,7 +306,7 @@ export default function CartDrawer() {
 
                         {/* Item Info */}
                         <div className="flex-1 min-w-0">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#78916D] bg-[#E8EFE5] px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-bold tracking-wider text-[#78916D] bg-[#E8EFE5] px-1.5 py-0.5 rounded">
                             {item.product.brand} • {item.product.size}
                           </span>
                           <h4 className="text-xs sm:text-sm font-bold text-[#174C3C] truncate mt-0.5">

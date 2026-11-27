@@ -103,7 +103,7 @@ export default function Header({
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/"
-              aria-label="Página inicial PETOU Store"
+              aria-label="Página inicial Petou Store"
               className="flex items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-[#174C3C]"
             >
               <div className="relative w-32 sm:w-36 h-10">
@@ -151,7 +151,7 @@ export default function Header({
             {/* Search Pill - Desktop & Tablet */}
             <form onSubmit={handleSearchSubmit} role="search" className="hidden sm:flex relative w-48 md:w-56 lg:w-64">
               <label htmlFor="desktop-search-input" className="sr-only">
-                Buscar produtos na PETOU Store
+                Buscar produtos na Petou Store
               </label>
               <input
                 id="desktop-search-input"
@@ -213,7 +213,7 @@ export default function Header({
         <div className="sm:hidden pb-3">
           <form onSubmit={handleSearchSubmit} role="search" className="relative w-full">
             <label htmlFor="mobile-search-input" className="sr-only">
-              Buscar produtos na PETOU Store
+              Buscar produtos na Petou Store
             </label>
             <input
               id="mobile-search-input"
@@ -255,8 +255,8 @@ export default function Header({
         >
           <div className="max-w-md mx-auto space-y-6">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#66716A] mb-3">
-                Categorias Principais
+              <p className="text-[11px] font-bold tracking-wider text-[#66716A] mb-3">
+                Categorias principais
               </p>
               <nav aria-label="Menu móvel por categorias" className="grid grid-cols-1 gap-2">
                 {NAV_CATEGORIES.map((item) => {

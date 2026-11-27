@@ -107,7 +107,7 @@ export default function Home() {
   }, [filteredProducts]);
 
   const whatsappInquiryUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(
-    "Olá! Gostaria de falar com a equipe PETOU sobre opções para meu pet e entregas em Barcarena."
+    "Olá! Gostaria de falar com a equipe Petou sobre opções para meu pet e entregas em Barcarena."
   )}`;
 
   return (
@@ -141,7 +141,7 @@ export default function Home() {
                 {/* Subtle reassurance badge with yellow accent */}
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#08422E]/5 border border-[#08422E]/10 text-[#08422E] text-xs font-bold tracking-wide">
                   <span className="w-2 h-2 rounded-full bg-[#FAB31F]" aria-hidden="true" />
-                  <span>Pet shop em Barcarena • Atendimento humanizado</span>
+                  <span>Pet shop em Barcarena • Atendimento que conhece o seu pet</span>
                 </div>
 
                 {/* Headline */}
@@ -245,7 +245,7 @@ export default function Home() {
             - Balanced spacing and clean mobile responsiveness
            ========================================================================= */}
         <section
-          aria-label="Benefícios e diferenciais da PETOU Store"
+          aria-label="Benefícios e diferenciais da Petou Store"
           className="bg-[#FFFFFF] border-b border-[#08422E]/10 py-5 sm:py-6"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -261,8 +261,8 @@ export default function Home() {
                   <span className="w-2 h-2 rounded-full bg-[#FAB31F] absolute top-1.5 right-1.5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Praticidade total</h3>
-                  <p className="text-xs text-[#202C27]/75">Peça em segundos pelo celular</p>
+                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Pedido rápido e simples</h3>
+                  <p className="text-xs text-[#202C27]/75">Faça seu pedido em poucos cliques, direto do celular</p>
                 </div>
               </div>
 
@@ -276,8 +276,8 @@ export default function Home() {
                   <span className="w-2 h-2 rounded-full bg-[#FAB31F] absolute top-1.5 right-1.5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Atendimento próximo</h3>
-                  <p className="text-xs text-[#202C27]/75">Suporte humanizado no WhatsApp</p>
+                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Atendimento personalizado</h3>
+                  <p className="text-xs text-[#202C27]/75">Tire dúvidas e acompanhe seu pedido pelo WhatsApp</p>
                 </div>
               </div>
 
@@ -292,7 +292,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-[#08422E] tracking-tight">Entrega em Barcarena</h3>
-                  <p className="text-xs text-[#202C27]/75">Agilidade direto na sua porta</p>
+                  <p className="text-xs text-[#202C27]/75">Receba em casa com rapidez e segurança</p>
                 </div>
               </div>
 
@@ -306,8 +306,8 @@ export default function Home() {
                   <span className="w-2 h-2 rounded-full bg-[#FAB31F] absolute top-1.5 right-1.5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Estoque confirmado</h3>
-                  <p className="text-xs text-[#202C27]/75">Itens validados antes do envio</p>
+                  <h3 className="text-sm font-black text-[#08422E] tracking-tight">Disponibilidade garantida</h3>
+                  <p className="text-xs text-[#202C27]/75">Conferimos cada item antes de enviar o seu pedido</p>
                 </div>
               </div>
 
@@ -525,7 +525,7 @@ export default function Home() {
         {/* =========================================================================
             6. FEATURED PRODUCTS
             Redesigned E-Commerce Product Grid:
-            - Official PETOU palette: #08422E, #FAB31F, #FDF9F1, #FFFFFF
+            - Official Petou palette: #08422E, #FAB31F, #FDF9F1, #FFFFFF
             - Clean e-commerce cards with clear product photography
             - High-contrast readable typography and prices
             - Prominent "Adicionar ao carrinho" CTA button
@@ -538,7 +538,7 @@ export default function Home() {
               <div>
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#08422E]/5 border border-[#08422E]/10 text-[#08422E] text-xs font-bold tracking-wide mb-3">
                   <span className="w-2 h-2 rounded-full bg-[#FAB31F]" aria-hidden="true" />
-                  <span>Catálogo Selecionado</span>
+                  <span>Catálogo Petou</span>
                 </div>
                 <h2 id="products-heading" className="text-3xl sm:text-4xl font-black text-[#08422E] tracking-tight">
                   Escolhas para o dia a dia
@@ -610,10 +610,10 @@ export default function Home() {
                     <div className="p-6 flex flex-col flex-1 justify-between space-y-4">
                       <div>
                         {/* Category & Availability tag */}
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[#08422E]/70 uppercase tracking-wider mb-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-[#08422E]/70 tracking-wider mb-2">
                           <span>{product.category}</span>
                           <span className="text-[10px] text-[#202C27]/60 bg-[#FDF9F1] px-2 py-0.5 rounded-full border border-[#08422E]/10 font-medium">
-                            Entrega em Barcarena
+                            {/*Entrega em Barcarena*/}
                           </span>
                         </div>
 
@@ -636,7 +636,7 @@ export default function Home() {
                       {/* Price Section */}
                       <div className="pt-4 border-t border-[#08422E]/10 flex items-baseline justify-between">
                         <div>
-                          <span className="text-[10px] uppercase font-bold text-[#202C27]/50 tracking-wider block">
+                          <span className="text-[10px] font-bold text-[#202C27]/50 tracking-wider block">
                             Valor
                           </span>
                           <span className="text-2xl font-black text-[#08422E] tracking-tight">
@@ -768,14 +768,14 @@ export default function Home() {
               <div className="relative z-10 shrink-0 w-full sm:w-auto flex flex-col items-center sm:items-end">
                 <a
                   href={`https://wa.me/${cleanNumber}?text=${encodeURIComponent(
-                    "Olá, equipe PETOU! Preciso de ajuda para escolher o melhor produto para meu pet em Barcarena."
+                    "Olá, equipe Petou! Preciso de ajuda para escolher o melhor produto para meu pet em Barcarena."
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4.5 sm:py-5 rounded-full bg-[#FAB31F] text-[#08422E] hover:bg-[#FAB31F]/90 active:scale-95 font-black text-sm sm:text-base transition-all shadow-xl shadow-[#FAB31F]/20 min-h-[52px] focus-visible:outline-2 focus-visible:outline-[#FFFFFF] text-center"
                 >
                   <MessageCircle className="w-5 h-5 fill-current" aria-hidden="true" />
-                  <span>Converse com a PETOU</span>
+                  <span>Converse com a Petou</span>
                   <ArrowRight className="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
                 </a>
 
