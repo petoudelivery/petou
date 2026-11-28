@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -30,6 +31,8 @@ export default function ProductDetailClient({ params }: ProductDetailClientProps
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [liveMessage, setLiveMessage] = useState("");
@@ -43,6 +46,8 @@ export default function ProductDetailClient({ params }: ProductDetailClientProps
     async function loadData() {
       try {
         setLoading(true);
+        setImageLoaded(false);
+        setImageError(false);
         const [prod, all] = await Promise.all([
           fetchProductById(id),
           fetchProducts(),
@@ -192,16 +197,45 @@ export default function ProductDetailClient({ params }: ProductDetailClientProps
 
               {/* Main Visual Slot */}
               <div
-                className="w-56 h-56 sm:w-72 sm:h-72 rounded-3xl bg-[#FAF8F2] flex items-center justify-center text-7xl sm:text-8xl my-6 shadow-inner border border-[#E8EFE5]"
-                role="img"
-                aria-label={`Imagem ilustrativa do produto ${product.name}`}
+                className="w-56 h-56 sm:w-72 sm:h-72 rounded-3xl bg-[#FAF8F2] flex items-center justify-center text-7xl sm:text-8xl my-6 shadow-inner border border-[#E8EFE5] relative overflow-hidden"
+                role={product.imageUrl && !imageError ? undefined : "img"}
+                aria-label={
+                  product.imageUrl && !imageError
+                    ? undefined
+                    : `Imagem ilustrativa do produto ${product.name}`
+                }
               >
-                {product.iconName === "dog-bowl" && "🍲"}
-                {product.iconName === "cat-bowl" && "🐟"}
-                {product.iconName === "bone" && "🦴"}
-                {product.iconName === "toy" && "🎾"}
-                {product.iconName === "shampoo" && "🧴"}
-                {product.iconName === "collar" && "🦮"}
+                {product.imageUrl && !imageError ? (
+                  <>
+                    {!imageLoaded && (
+                      <div
+                        className="absolute inset-0 bg-[#E8EFE5]/60 animate-pulse"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <Image
+                      src={product.imageUrl}
+                      alt={product.name}
+                      fill
+                      priority
+                      sizes="(max-width: 640px) 224px, 288px"
+                      onLoad={() => setImageLoaded(true)}
+                      onError={() => setImageError(true)}
+                      className={`object-cover object-center transition-opacity duration-300 ${
+                        imageLoaded ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                  </>
+                ) : (
+                  <>
+                    {product.iconName === "dog-bowl" && "🍲"}
+                    {product.iconName === "cat-bowl" && "🐟"}
+                    {product.iconName === "bone" && "🦴"}
+                    {product.iconName === "toy" && "🎾"}
+                    {product.iconName === "shampoo" && "🧴"}
+                    {product.iconName === "collar" && "🦮"}
+                  </>
+                )}
               </div>
 
               <div className="w-full pt-4 border-t border-[#E8EFE5] flex items-center justify-between text-xs text-[#202C27]/85">
@@ -366,13 +400,25 @@ export default function ProductDetailClient({ params }: ProductDetailClientProps
                     className="group bg-[#FFFFFF] rounded-3xl p-5 border border-[#E8EFE5] hover:border-[#78916D]/30 hover:shadow-lg transition-all flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#174C3C]"
                   >
                     <div>
-                      <div className="h-36 rounded-2xl bg-[#FAF8F2] flex items-center justify-center text-4xl group-hover:scale-105 transition" aria-hidden="true">
-                        {rel.iconName === "dog-bowl" && "🍲"}
-                        {rel.iconName === "cat-bowl" && "🐟"}
-                        {rel.iconName === "bone" && "🦴"}
-                        {rel.iconName === "toy" && "🎾"}
-                        {rel.iconName === "shampoo" && "🧴"}
-                        {rel.iconName === "collar" && "🦮"}
+                      <div className="h-36 rounded-2xl bg-[#FAF8F2] flex items-center justify-center text-4xl relative overflow-hidden" aria-hidden="true">
+                        {rel.imageUrl ? (
+                          <Image
+                            src={rel.imageUrl}
+                            alt={rel.name}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <>
+                            {rel.iconName === "dog-bowl" && "🍲"}
+                            {rel.iconName === "cat-bowl" && "🐟"}
+                            {rel.iconName === "bone" && "🦴"}
+                            {rel.iconName === "toy" && "🎾"}
+                            {rel.iconName === "shampoo" && "🧴"}
+                            {rel.iconName === "collar" && "🦮"}
+                          </>
+                        )}
                       </div>
                       <span className="text-[10px] uppercase font-bold text-[#78916D] block mt-3">
                         {rel.brand} • {rel.size}
