@@ -56,6 +56,11 @@ export default function CartDrawer() {
       ]);
       setNeighborhoods(areas);
       setTargetWhatsApp(wa);
+      if (areas.length > 0) {
+        setNeighborhoodId((current) =>
+          areas.some((a) => a.id === current) ? current : areas[0].id
+        );
+      }
     }
     loadData();
   }, []);

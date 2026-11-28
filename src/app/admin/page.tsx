@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Session } from "@supabase/supabase-js";
@@ -24,13 +24,17 @@ import {
   EyeOff,
   ImageIcon,
   RefreshCw,
+  Power,
+  ShieldAlert,
 } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { CATEGORIES } from "@/data/products";
 import { Neighborhood } from "@/types/store";
 import {
+  CategoryRow,
   RawProduct,
   ProductInput,
+  checkIsAdmin,
+  adminFetchCategories,
   adminFetchAllProducts,
   adminCreateProduct,
   adminUpdateProduct,
@@ -49,11 +53,8 @@ interface FormState {
   brand: string;
   size: string;
   price: string;
-  category: string;
-  description: string;
-  badge: string;
-  icon_name: string;
-  is_active: boolean;
+  category_id: string;
+  active: boolean;
   image_url: string;
 }
 
@@ -62,22 +63,10 @@ const EMPTY_FORM: FormState = {
   brand: "",
   size: "",
   price: "",
-  category: "Rações para cães",
-  description: "",
-  badge: "",
-  icon_name: "dog-bowl",
-  is_active: true,
+  category_id: "",
+  active: true,
   image_url: "",
 };
-
-const ICON_OPTIONS = [
-  { value: "dog-bowl", label: "🍲 Ração para cão" },
-  { value: "cat-bowl", label: "🐟 Ração para gato" },
-  { value: "bone", label: "🦴 Petisco" },
-  { value: "toy", label: "🎾 Brinquedo" },
-  { value: "shampoo", label: "🧴 Higiene" },
-  { value: "collar", label: "🦮 Acessório" },
-];
 
 function productToForm(p: RawProduct): FormState {
   return {
@@ -85,11 +74,8 @@ function productToForm(p: RawProduct): FormState {
     brand: p.brand || "",
     size: p.size || "",
     price: String(p.price),
-    category: p.category,
-    description: p.description || "",
-    badge: p.badge || "",
-    icon_name: p.icon_name || "dog-bowl",
-    is_active: p.is_active,
+    category_id: p.category_id || "",
+    active: p.active,
     image_url: p.image_url || "",
   };
 }
@@ -104,7 +90,8 @@ const INPUT_CLS =
 export default function AdminPage() {
   // Auth
   const [session, setSession] = useState<Session | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(Boolean(supabase));
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -116,6 +103,7 @@ export default function AdminPage() {
 
   // Data
   const [products, setProducts] = useState<RawProduct[]>([]);
+  const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [deliveryAreas, setDeliveryAreas] = useState<Neighborhood[]>([]);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [dataLoading, setDataLoading] = useState(false);
@@ -131,7 +119,8 @@ export default function AdminPage() {
   const [saveError, setSaveError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Delete
+  // Quick toggle & delete
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -148,36 +137,38 @@ export default function AdminPage() {
   // ── Auth listener ────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!supabase) {
-      setAuthLoading(false);
-      return;
-    }
+    if (!supabase) return;
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setAuthLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
+      if (!s) setIsAdmin(null);
     });
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Load data when authenticated ────────────────────────────────────────────
+  // ── Verify admin role & load data ───────────────────────────────────────────
 
-  useEffect(() => {
-    if (!session) return;
-    loadData();
-  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+  const showFeedback = useCallback((type: "success" | "error", msg: string) => {
+    setFeedback({ type, msg });
+    setTimeout(() => setFeedback(null), 4500);
+  }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setDataLoading(true);
     try {
-      const [prods, areas, wa] = await Promise.all([
+      const [prods, cats, areas, wa] = await Promise.all([
         adminFetchAllProducts(),
+        adminFetchCategories(),
         fetchDeliveryAreas(),
         fetchWhatsAppNumber(),
       ]);
       setProducts(prods);
+      setCategories(cats);
       setDeliveryAreas(areas);
       setWhatsappNumber(wa);
       const feeMap: Record<string, string> = {};
@@ -185,10 +176,30 @@ export default function AdminPage() {
         feeMap[a.id] = a.fee !== null ? String(a.fee) : "";
       }
       setDeliveryFeeInputs(feeMap);
+    } catch (err: unknown) {
+      showFeedback(
+        "error",
+        err instanceof Error ? err.message : "Erro ao carregar dados do painel."
+      );
     } finally {
       setDataLoading(false);
     }
-  };
+  }, [showFeedback]);
+
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    checkIsAdmin(session.user.id).then((allowed) => {
+      if (cancelled) return;
+      setIsAdmin(allowed);
+      if (allowed) {
+        void loadData();
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, loadData]);
 
   // ── Auth handlers ────────────────────────────────────────────────────────────
 
@@ -206,8 +217,8 @@ export default function AdminPage() {
     });
     if (error) {
       setLoginError("E-mail ou senha incorretos.");
-      setLoginLoading(false);
     }
+    setLoginLoading(false);
   };
 
   const handleLogout = async () => {
@@ -219,7 +230,10 @@ export default function AdminPage() {
 
   const openAddForm = () => {
     setEditingProduct(null);
-    setFormData(EMPTY_FORM);
+    setFormData({
+      ...EMPTY_FORM,
+      category_id: categories[0]?.id || "",
+    });
     setImageFile(null);
     setImagePreview(null);
     setPendingImageDelete(null);
@@ -265,17 +279,31 @@ export default function AdminPage() {
 
   const handleSaveProduct = async () => {
     setSaveError("");
-    if (!formData.name.trim()) { setSaveError("O nome do produto é obrigatório."); return; }
-    if (!formData.price || Number(formData.price) <= 0) { setSaveError("Informe um preço válido."); return; }
-    if (!formData.category) { setSaveError("Selecione uma categoria."); return; }
+    if (!formData.name.trim()) {
+      setSaveError("O nome do produto é obrigatório.");
+      return;
+    }
+    if (!formData.size.trim()) {
+      setSaveError("A embalagem / tamanho é obrigatória.");
+      return;
+    }
+    if (!formData.price || Number(formData.price) <= 0) {
+      setSaveError("Informe um preço válido.");
+      return;
+    }
+    if (!formData.category_id) {
+      setSaveError("Selecione uma categoria.");
+      return;
+    }
 
     setIsSaving(true);
     try {
       let finalImageUrl: string | null = formData.image_url || null;
 
-      // If replacing existing image, mark old for deletion
       const oldImageToDelete =
-        imageFile && editingProduct?.image_url ? editingProduct.image_url : pendingImageDelete;
+        imageFile && editingProduct?.image_url
+          ? editingProduct.image_url
+          : pendingImageDelete;
 
       if (imageFile) {
         finalImageUrl = await uploadProductImage(imageFile);
@@ -283,22 +311,23 @@ export default function AdminPage() {
 
       const input: ProductInput = {
         name: formData.name.trim(),
-        brand: formData.brand.trim() || "Petou",
-        size: formData.size.trim() || "1 un",
+        brand: formData.brand.trim() || "PETOU",
+        size: formData.size.trim(),
         price: Number(formData.price),
-        category: formData.category,
-        description: formData.description.trim(),
-        badge: formData.badge.trim() || null,
-        icon_name: formData.icon_name,
-        is_active: formData.is_active,
+        category_id: formData.category_id || null,
         image_url: finalImageUrl,
+        active: formData.active,
       };
 
       if (editingProduct) {
-        await adminUpdateProduct(editingProduct.id, input);
+        const updated = await adminUpdateProduct(editingProduct.id, input);
+        setProducts((prev) =>
+          prev.map((item) => (item.id === updated.id ? updated : item))
+        );
         showFeedback("success", `"${input.name}" atualizado com sucesso.`);
       } else {
-        await adminCreateProduct(input);
+        const created = await adminCreateProduct(input);
+        setProducts((prev) => [created, ...prev]);
         showFeedback("success", `"${input.name}" criado com sucesso.`);
       }
 
@@ -306,13 +335,38 @@ export default function AdminPage() {
         await deleteProductImage(oldImageToDelete);
       }
 
-      const updated = await adminFetchAllProducts();
-      setProducts(updated);
       closeForm();
     } catch (err: unknown) {
-      setSaveError(err instanceof Error ? err.message : "Erro ao salvar produto.");
+      const msg =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" && err !== null && "message" in err
+            ? String((err as { message: unknown }).message)
+            : "Erro ao salvar produto.";
+      setSaveError(msg);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleToggleActive = async (p: RawProduct) => {
+    setTogglingId(p.id);
+    try {
+      const updated = await adminUpdateProduct(p.id, { active: !p.active });
+      setProducts((prev) =>
+        prev.map((item) => (item.id === updated.id ? updated : item))
+      );
+      showFeedback(
+        "success",
+        `"${p.name}" ${updated.active ? "ativado" : "desativado"}.`
+      );
+    } catch (err: unknown) {
+      showFeedback(
+        "error",
+        err instanceof Error ? err.message : "Erro ao alterar status."
+      );
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -323,11 +377,13 @@ export default function AdminPage() {
       const p = products.find((x) => x.id === deleteConfirmId);
       await adminDeleteProduct(deleteConfirmId);
       if (p?.image_url) await deleteProductImage(p.image_url);
-      const updated = await adminFetchAllProducts();
-      setProducts(updated);
+      setProducts((prev) => prev.filter((item) => item.id !== deleteConfirmId));
       showFeedback("success", "Produto excluído.");
     } catch (err: unknown) {
-      showFeedback("error", err instanceof Error ? err.message : "Erro ao excluir produto.");
+      showFeedback(
+        "error",
+        err instanceof Error ? err.message : "Erro ao excluir produto."
+      );
     } finally {
       setIsDeleting(false);
       setDeleteConfirmId(null);
@@ -349,7 +405,10 @@ export default function AdminPage() {
       );
       showFeedback("success", "Taxa atualizada.");
     } catch (err: unknown) {
-      showFeedback("error", err instanceof Error ? err.message : "Erro ao salvar taxa.");
+      showFeedback(
+        "error",
+        err instanceof Error ? err.message : "Erro ao salvar taxa."
+      );
     } finally {
       setDeliverySaving(null);
     }
@@ -361,16 +420,19 @@ export default function AdminPage() {
       await adminSaveWhatsApp(whatsappNumber.trim());
       showFeedback("success", "Número de WhatsApp salvo.");
     } catch (err: unknown) {
-      showFeedback("error", err instanceof Error ? err.message : "Erro ao salvar configurações.");
+      showFeedback(
+        "error",
+        err instanceof Error ? err.message : "Erro ao salvar configurações."
+      );
     } finally {
       setSettingsSaving(false);
     }
   };
 
-  const showFeedback = (type: "success" | "error", msg: string) => {
-    setFeedback({ type, msg });
-    setTimeout(() => setFeedback(null), 4500);
-  };
+  const getCategoryName = (p: RawProduct) =>
+    p.categories?.name ||
+    categories.find((c) => c.id === p.category_id)?.name ||
+    "Sem categoria";
 
   // ── Render: Supabase not configured ─────────────────────────────────────────
 
@@ -379,13 +441,24 @@ export default function AdminPage() {
       <div className="min-h-screen bg-[#FDF9F1] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
           <AlertCircle className="mx-auto mb-4 text-amber-500" size={48} />
-          <h1 className="text-xl font-bold text-[#08422E] mb-2">Supabase não configurado</h1>
+          <h1 className="text-xl font-bold text-[#08422E] mb-2">
+            Supabase não configurado
+          </h1>
           <p className="text-sm text-[#08422E]/70 mb-4">
-            Adicione as variáveis de ambiente <code className="bg-[#FDF9F1] px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> e{" "}
-            <code className="bg-[#FDF9F1] px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> ao arquivo{" "}
+            Adicione as variáveis de ambiente{" "}
+            <code className="bg-[#FDF9F1] px-1 rounded">
+              NEXT_PUBLIC_SUPABASE_URL
+            </code>{" "}
+            e{" "}
+            <code className="bg-[#FDF9F1] px-1 rounded">
+              NEXT_PUBLIC_SUPABASE_ANON_KEY
+            </code>{" "}
+            ao arquivo{" "}
             <code className="bg-[#FDF9F1] px-1 rounded">.env.local</code>.
           </p>
-          <Link href="/" className="text-sm text-[#08422E] underline">← Voltar à loja</Link>
+          <Link href="/" className="text-sm text-[#08422E] underline">
+            ← Voltar à loja
+          </Link>
         </div>
       </div>
     );
@@ -393,7 +466,7 @@ export default function AdminPage() {
 
   // ── Render: Loading ──────────────────────────────────────────────────────────
 
-  if (authLoading) {
+  if (authLoading || (session && isAdmin === null)) {
     return (
       <div className="min-h-screen bg-[#FDF9F1] flex items-center justify-center">
         <RefreshCw className="animate-spin text-[#08422E]" size={32} />
@@ -407,7 +480,6 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-[#FDF9F1] flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          {/* Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-[#08422E] rounded-2xl mb-4">
               <Package size={28} className="text-white" />
@@ -479,11 +551,50 @@ export default function AdminPage() {
             </button>
 
             <div className="text-center pt-1">
-              <Link href="/" className="text-xs text-[#08422E]/50 hover:text-[#08422E] transition-colors">
+              <Link
+                href="/"
+                className="text-xs text-[#08422E]/50 hover:text-[#08422E] transition-colors"
+              >
                 ← Voltar à loja
               </Link>
             </div>
           </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render: Authenticated but not an authorized admin ───────────────────────
+
+  if (isAdmin === false) {
+    return (
+      <div className="min-h-screen bg-[#FDF9F1] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center border border-[#08422E]/10">
+          <ShieldAlert className="mx-auto mb-4 text-red-500" size={48} />
+          <h1 className="text-xl font-bold text-[#08422E] mb-2">
+            Acesso não autorizado
+          </h1>
+          <p className="text-sm text-[#08422E]/70 mb-6">
+            A conta{" "}
+            <span className="font-semibold text-[#08422E]">
+              {session.user.email}
+            </span>{" "}
+            não possui permissão de administrador.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <Link
+              href="/"
+              className="px-4 py-2.5 rounded-xl border border-[#08422E]/20 text-sm font-medium text-[#08422E] hover:bg-[#FDF9F1]"
+            >
+              Voltar à loja
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#08422E] text-white text-sm font-semibold hover:bg-[#08422E]/90"
+            >
+              <LogOut size={14} /> Sair
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -495,7 +606,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#FDF9F1]">
-
       {/* Global Feedback Banner */}
       {feedback && (
         <div
@@ -522,10 +632,13 @@ export default function AdminPage() {
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                 <Trash2 size={18} className="text-red-600" />
               </div>
-              <h2 className="text-base font-bold text-[#08422E]">Excluir produto?</h2>
+              <h2 className="text-base font-bold text-[#08422E]">
+                Excluir produto?
+              </h2>
             </div>
             <p className="text-sm text-[#08422E]/70 mb-6">
-              Esta ação não pode ser desfeita. O produto e sua imagem serão removidos permanentemente.
+              Esta ação não pode ser desfeita. O produto e sua imagem serão
+              removidos permanentemente.
             </p>
             <div className="flex gap-3">
               <button
@@ -539,7 +652,11 @@ export default function AdminPage() {
                 disabled={isDeleting}
                 className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
               >
-                {isDeleting ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                {isDeleting ? (
+                  <RefreshCw size={14} className="animate-spin" />
+                ) : (
+                  <Trash2 size={14} />
+                )}
                 {isDeleting ? "Excluindo…" : "Excluir"}
               </button>
             </div>
@@ -550,7 +667,10 @@ export default function AdminPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#08422E] text-white px-5 py-3.5 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-sm">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-sm"
+          >
             <ArrowLeft size={15} />
           </Link>
           <div className="w-px h-5 bg-white/20" />
@@ -581,11 +701,14 @@ export default function AdminPage() {
       </header>
 
       <div className="max-w-6xl mx-auto px-4 py-6">
-
         {/* Tab Nav */}
         <nav className="flex gap-1 bg-white rounded-xl p-1 shadow-sm border border-[#08422E]/10 mb-6 w-fit">
           {(["products", "delivery", "settings"] as const).map((tab) => {
-            const labels = { products: "Produtos", delivery: "Bairros & Taxas", settings: "Configurações" };
+            const labels = {
+              products: "Produtos",
+              delivery: "Bairros & Taxas",
+              settings: "Configurações",
+            };
             const icons = {
               products: <Package size={15} />,
               delivery: <MapPin size={15} />,
@@ -615,7 +738,8 @@ export default function AdminPage() {
               <div>
                 <h2 className="text-lg font-bold text-[#08422E]">Produtos</h2>
                 <p className="text-sm text-[#08422E]/60">
-                  {products.length} produto{products.length !== 1 ? "s" : ""} cadastrado{products.length !== 1 ? "s" : ""}
+                  {products.length} produto{products.length !== 1 ? "s" : ""}{" "}
+                  cadastrado{products.length !== 1 ? "s" : ""}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -624,7 +748,11 @@ export default function AdminPage() {
                   disabled={dataLoading}
                   className="flex items-center gap-1.5 text-sm text-[#08422E]/60 hover:text-[#08422E] px-3 py-2 rounded-lg hover:bg-[#08422E]/5 transition-colors disabled:opacity-40"
                 >
-                  <RefreshCw size={14} className={dataLoading ? "animate-spin" : ""} /> Atualizar
+                  <RefreshCw
+                    size={14}
+                    className={dataLoading ? "animate-spin" : ""}
+                  />{" "}
+                  Atualizar
                 </button>
                 <button
                   onClick={openAddForm}
@@ -638,15 +766,21 @@ export default function AdminPage() {
             {/* Loading */}
             {dataLoading && (
               <div className="flex items-center justify-center py-20 text-[#08422E]/50">
-                <RefreshCw size={24} className="animate-spin mr-3" /> Carregando…
+                <RefreshCw size={24} className="animate-spin mr-3" />{" "}
+                Carregando…
               </div>
             )}
 
             {/* Empty */}
             {!dataLoading && products.length === 0 && (
               <div className="text-center py-20 bg-white rounded-2xl border border-[#08422E]/10">
-                <Package size={48} className="mx-auto text-[#08422E]/20 mb-4" />
-                <p className="text-[#08422E]/50 text-sm">Nenhum produto cadastrado ainda.</p>
+                <Package
+                  size={48}
+                  className="mx-auto text-[#08422E]/20 mb-4"
+                />
+                <p className="text-[#08422E]/50 text-sm">
+                  Nenhum produto cadastrado ainda.
+                </p>
                 <button
                   onClick={openAddForm}
                   className="mt-4 text-sm text-[#08422E] font-medium underline underline-offset-2"
@@ -678,25 +812,28 @@ export default function AdminPage() {
                         <ImageIcon size={36} className="text-[#08422E]/20" />
                       )}
                       {/* Status badge */}
-                      <div className={`absolute top-2.5 right-2.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        p.is_active
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-600"
-                      }`}>
-                        {p.is_active ? "Ativo" : "Inativo"}
+                      <div
+                        className={`absolute top-2.5 right-2.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                          p.active
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-600"
+                        }`}
+                      >
+                        {p.active ? "Ativo" : "Inativo"}
                       </div>
-                      {p.badge && (
-                        <div className="absolute top-2.5 left-2.5 text-xs font-bold px-2.5 py-1 rounded-full bg-[#FAB31F] text-[#08422E]">
-                          {p.badge}
-                        </div>
-                      )}
                     </div>
 
                     {/* Info */}
                     <div className="p-4">
-                      <p className="text-xs text-[#08422E]/50 mb-0.5">{p.category}</p>
-                      <h3 className="font-semibold text-[#08422E] text-sm leading-tight mb-1">{p.name}</h3>
-                      <p className="text-xs text-[#08422E]/60 mb-2">{p.brand} · {p.size}</p>
+                      <p className="text-xs text-[#08422E]/50 mb-0.5">
+                        {getCategoryName(p)}
+                      </p>
+                      <h3 className="font-semibold text-[#08422E] text-sm leading-tight mb-1">
+                        {p.name}
+                      </h3>
+                      <p className="text-xs text-[#08422E]/60 mb-2">
+                        {p.brand} · {p.size}
+                      </p>
                       <p className="text-base font-bold text-[#08422E]">
                         R$ {Number(p.price).toFixed(2).replace(".", ",")}
                       </p>
@@ -709,6 +846,15 @@ export default function AdminPage() {
                         className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-[#08422E]/70 hover:text-[#08422E] hover:bg-[#FDF9F1] transition-colors"
                       >
                         <Edit2 size={14} /> Editar
+                      </button>
+                      <div className="w-px bg-[#08422E]/8" />
+                      <button
+                        onClick={() => handleToggleActive(p)}
+                        disabled={togglingId === p.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm text-[#08422E]/70 hover:text-[#08422E] hover:bg-[#FDF9F1] transition-colors disabled:opacity-50"
+                      >
+                        <Power size={14} />{" "}
+                        {p.active ? "Desativar" : "Ativar"}
                       </button>
                       <div className="w-px bg-[#08422E]/8" />
                       <button
@@ -729,13 +875,18 @@ export default function AdminPage() {
         {activeTab === "delivery" && (
           <div>
             <div className="mb-5">
-              <h2 className="text-lg font-bold text-[#08422E]">Bairros & Taxas de Entrega</h2>
-              <p className="text-sm text-[#08422E]/60">Deixe em branco para "a confirmar no atendimento".</p>
+              <h2 className="text-lg font-bold text-[#08422E]">
+                Bairros & Taxas de Entrega
+              </h2>
+              <p className="text-sm text-[#08422E]/60">
+                Deixe em branco para &quot;a confirmar no atendimento&quot;.
+              </p>
             </div>
 
             {dataLoading ? (
               <div className="flex items-center justify-center py-20 text-[#08422E]/50">
-                <RefreshCw size={24} className="animate-spin mr-3" /> Carregando…
+                <RefreshCw size={24} className="animate-spin mr-3" />{" "}
+                Carregando…
               </div>
             ) : (
               <div className="bg-white rounded-2xl border border-[#08422E]/10 divide-y divide-[#08422E]/8 overflow-hidden shadow-sm">
@@ -745,8 +896,13 @@ export default function AdminPage() {
                     className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-[#FDF9F1]/50 transition-colors"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <MapPin size={15} className="text-[#08422E]/40 shrink-0" />
-                      <span className="text-sm font-medium text-[#08422E] truncate">{area.name}</span>
+                      <MapPin
+                        size={15}
+                        className="text-[#08422E]/40 shrink-0"
+                      />
+                      <span className="text-sm font-medium text-[#08422E] truncate">
+                        {area.name}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="text-xs text-[#08422E]/50">R$</span>
@@ -794,7 +950,9 @@ export default function AdminPage() {
           <div>
             <div className="mb-5">
               <h2 className="text-lg font-bold text-[#08422E]">Configurações</h2>
-              <p className="text-sm text-[#08422E]/60">Ajustes gerais da loja.</p>
+              <p className="text-sm text-[#08422E]/60">
+                Ajustes gerais da loja.
+              </p>
             </div>
 
             <div className="bg-white rounded-2xl border border-[#08422E]/10 shadow-sm p-6 max-w-md space-y-5">
@@ -803,7 +961,8 @@ export default function AdminPage() {
                   Número de WhatsApp
                 </label>
                 <p className="text-xs text-[#08422E]/50 mb-2">
-                  Somente dígitos, incluindo código do país e DDD. Ex.: 5591980762149
+                  Somente dígitos, incluindo código do país e DDD. Ex.:
+                  5591980762149
                 </p>
                 <input
                   type="text"
@@ -818,7 +977,11 @@ export default function AdminPage() {
                 disabled={settingsSaving}
                 className="flex items-center gap-2 bg-[#08422E] text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[#08422E]/90 transition-all active:scale-95 disabled:opacity-60"
               >
-                {settingsSaving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                {settingsSaving ? (
+                  <RefreshCw size={14} className="animate-spin" />
+                ) : (
+                  <Save size={14} />
+                )}
                 {settingsSaving ? "Salvando…" : "Salvar configurações"}
               </button>
             </div>
@@ -829,15 +992,12 @@ export default function AdminPage() {
       {/* ── Product Form Drawer ──────────────────────────────────────────────── */}
       {showForm && (
         <div className="fixed inset-0 z-40 flex items-stretch">
-          {/* Backdrop */}
           <div
             className="flex-1 bg-black/40 backdrop-blur-sm"
             onClick={closeForm}
           />
 
-          {/* Panel */}
           <div className="w-full max-w-md bg-white flex flex-col shadow-2xl">
-            {/* Panel header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#08422E]/10">
               <h2 className="text-base font-bold text-[#08422E]">
                 {editingProduct ? "Editar produto" : "Novo produto"}
@@ -850,9 +1010,7 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Scrollable form body */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-
               {/* Image section */}
               <div>
                 <label className="block text-xs font-semibold text-[#08422E]/70 mb-2 uppercase tracking-wide">
@@ -866,7 +1024,7 @@ export default function AdminPage() {
                       fill
                       className="object-cover"
                       sizes="400px"
-                      unoptimized={!!imagePreview} // base64 preview
+                      unoptimized={!!imagePreview}
                     />
                     <button
                       type="button"
@@ -882,7 +1040,9 @@ export default function AdminPage() {
                     className="h-32 border-2 border-dashed border-[#08422E]/20 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#08422E]/40 hover:bg-[#FDF9F1]/60 transition-all mb-2"
                   >
                     <ImageIcon size={28} className="text-[#08422E]/30" />
-                    <span className="text-xs text-[#08422E]/50">Clique para selecionar imagem</span>
+                    <span className="text-xs text-[#08422E]/50">
+                      Clique para selecionar imagem
+                    </span>
                   </div>
                 )}
                 <input
@@ -911,7 +1071,9 @@ export default function AdminPage() {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, name: e.target.value }))
+                  }
                   placeholder="Ex.: Ração Dog Chow Adulto"
                   className={INPUT_CLS}
                 />
@@ -926,19 +1088,23 @@ export default function AdminPage() {
                   <input
                     type="text"
                     value={formData.brand}
-                    onChange={(e) => setFormData((p) => ({ ...p, brand: e.target.value }))}
-                    placeholder="Ex.: Nestlé"
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, brand: e.target.value }))
+                    }
+                    placeholder="Ex.: PETOU"
                     className={INPUT_CLS}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
-                    Embalagem
+                    Embalagem *
                   </label>
                   <input
                     type="text"
                     value={formData.size}
-                    onChange={(e) => setFormData((p) => ({ ...p, size: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, size: e.target.value }))
+                    }
                     placeholder="Ex.: 15 kg"
                     className={INPUT_CLS}
                   />
@@ -955,7 +1121,9 @@ export default function AdminPage() {
                   min="0"
                   step="0.01"
                   value={formData.price}
-                  onChange={(e) => setFormData((p) => ({ ...p, price: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, price: e.target.value }))
+                  }
                   placeholder="0,00"
                   className={INPUT_CLS}
                 />
@@ -967,76 +1135,43 @@ export default function AdminPage() {
                   Categoria *
                 </label>
                 <select
-                  value={formData.category}
-                  onChange={(e) => setFormData((p) => ({ ...p, category: e.target.value }))}
+                  value={formData.category_id}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, category_id: e.target.value }))
+                  }
                   className={INPUT_CLS}
                 >
-                  {CATEGORIES.filter((c) => c !== "Todos").map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                  <option value="">Selecione uma categoria</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
-              </div>
-
-              {/* Icon */}
-              <div>
-                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
-                  Ícone de categoria
-                </label>
-                <select
-                  value={formData.icon_name}
-                  onChange={(e) => setFormData((p) => ({ ...p, icon_name: e.target.value }))}
-                  className={INPUT_CLS}
-                >
-                  {ICON_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
-                  Descrição
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-                  placeholder="Descreva o produto de forma breve…"
-                  className={`${INPUT_CLS} resize-none`}
-                />
-              </div>
-
-              {/* Badge */}
-              <div>
-                <label className="block text-xs font-semibold text-[#08422E]/70 mb-1.5 uppercase tracking-wide">
-                  Badge (opcional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.badge}
-                  onChange={(e) => setFormData((p) => ({ ...p, badge: e.target.value }))}
-                  placeholder="Ex.: Novo, Promoção"
-                  className={INPUT_CLS}
-                />
               </div>
 
               {/* Active toggle */}
               <div className="flex items-center justify-between p-3.5 rounded-xl border border-[#08422E]/10 bg-[#FDF9F1]/40">
                 <div>
-                  <p className="text-sm font-medium text-[#08422E]">Produto ativo</p>
-                  <p className="text-xs text-[#08422E]/50">Visível para clientes na loja</p>
+                  <p className="text-sm font-medium text-[#08422E]">
+                    Produto ativo
+                  </p>
+                  <p className="text-xs text-[#08422E]/50">
+                    Visível para clientes na loja
+                  </p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setFormData((p) => ({ ...p, is_active: !p.is_active }))}
+                  onClick={() =>
+                    setFormData((p) => ({ ...p, active: !p.active }))
+                  }
                   className={`w-11 h-6 rounded-full transition-colors relative ${
-                    formData.is_active ? "bg-[#08422E]" : "bg-[#08422E]/20"
+                    formData.active ? "bg-[#08422E]" : "bg-[#08422E]/20"
                   }`}
                 >
                   <span
                     className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
-                      formData.is_active ? "translate-x-6" : "translate-x-1"
+                      formData.active ? "translate-x-6" : "translate-x-1"
                     }`}
                   />
                 </button>
@@ -1050,7 +1185,6 @@ export default function AdminPage() {
               )}
             </div>
 
-            {/* Panel footer */}
             <div className="flex items-center gap-3 px-6 py-4 border-t border-[#08422E]/10 bg-white">
               <button
                 type="button"
@@ -1070,7 +1204,11 @@ export default function AdminPage() {
                 ) : (
                   <Save size={15} />
                 )}
-                {isSaving ? "Salvando…" : editingProduct ? "Salvar alterações" : "Criar produto"}
+                {isSaving
+                  ? "Salvando…"
+                  : editingProduct
+                    ? "Salvar alterações"
+                    : "Criar produto"}
               </button>
             </div>
           </div>

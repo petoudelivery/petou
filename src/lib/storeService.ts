@@ -7,16 +7,71 @@ export const CATEGORY_SLUG_MAP: Record<string, string> = {
   caes: "Rações para cães",
   gatos: "Rações para gatos",
   alimentacao: "Petiscos",
+  brinquedos: "Brinquedos",
   higiene: "Higiene",
   acessorios: "Acessórios",
 };
+
+const STOREFRONT_PRODUCT_SELECT =
+  "id, name, brand, size, price, category_id, image_url, is_demo, active, categories(name)";
+
+interface DbProductRow {
+  id: string;
+  name: string;
+  brand: string | null;
+  size: string | null;
+  price: number | string;
+  category_id: string | null;
+  image_url: string | null;
+  is_demo: boolean | null;
+  active: boolean | null;
+  categories?: { name: string } | { name: string }[] | null;
+}
+
+function deriveIconName(categoryName: string): string {
+  const normalized = categoryName.toLowerCase();
+  if (normalized.includes("gato")) return "cat-bowl";
+  if (normalized.includes("petisco")) return "bone";
+  if (normalized.includes("brinquedo")) return "toy";
+  if (normalized.includes("higiene")) return "shampoo";
+  if (normalized.includes("acess")) return "collar";
+  return "dog-bowl";
+}
+
+function extractCategoryName(
+  categories: DbProductRow["categories"]
+): string {
+  if (!categories) return "Rações para cães";
+  if (Array.isArray(categories)) {
+    return categories[0]?.name || "Rações para cães";
+  }
+  return categories.name || "Rações para cães";
+}
+
+function mapDbProduct(item: DbProductRow): Product {
+  const price = Number(item.price) || 0;
+  const categoryName = extractCategoryName(item.categories);
+
+  return {
+    id: String(item.id),
+    name: item.name || "Produto",
+    brand: item.brand || "Petou",
+    size: item.size || "1 un",
+    price,
+    formattedPrice: `R$ ${price.toFixed(2).replace(".", ",")}`,
+    category: categoryName,
+    categoryId: item.category_id || undefined,
+    isDemo: Boolean(item.is_demo),
+    iconName: deriveIconName(categoryName),
+    imageUrl: item.image_url || undefined,
+  };
+}
 
 export function slugToCategoryName(slug: string): string {
   const normalized = decodeURIComponent(slug).toLowerCase().trim();
   if (CATEGORY_SLUG_MAP[normalized]) {
     return CATEGORY_SLUG_MAP[normalized];
   }
-  // Try matching directly
   const found = CATEGORIES.find(
     (c) => c.toLowerCase().replace(/\s+/g, "-") === normalized
   );
@@ -40,27 +95,15 @@ export async function fetchProducts(): Promise<Product[]> {
   try {
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select(STOREFRONT_PRODUCT_SELECT)
+      .eq("active", true)
       .order("created_at", { ascending: true });
 
     if (error || !data || data.length === 0) {
       return DEMO_PRODUCTS;
     }
 
-    return data.map((item) => ({
-      id: String(item.id),
-      name: item.name || "Produto",
-      brand: item.brand || "PETOU",
-      size: item.size || "1 un",
-      price: Number(item.price) || 0,
-      formattedPrice: `R$ ${Number(item.price || 0).toFixed(2).replace(".", ",")}`,
-      category: item.category || "Rações para cães",
-      isDemo: Boolean(item.is_demo),
-      badge: item.badge || undefined,
-      description: item.description || "",
-      iconName: item.icon_name || "dog-bowl",
-      imageUrl: item.image_url || undefined,
-    }));
+    return (data as unknown as DbProductRow[]).map(mapDbProduct);
   } catch (err) {
     console.error("Erro ao carregar produtos do Supabase:", err);
     return DEMO_PRODUCTS;
@@ -68,40 +111,24 @@ export async function fetchProducts(): Promise<Product[]> {
 }
 
 export async function fetchProductById(id: string): Promise<Product | null> {
-  const allProducts = await fetchProducts();
-  const found = allProducts.find((p) => p.id === id);
-  if (found) return found;
-
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select(STOREFRONT_PRODUCT_SELECT)
         .eq("id", id)
+        .eq("active", true)
         .maybeSingle();
 
       if (data && !error) {
-        return {
-          id: String(data.id),
-          name: data.name || "Produto",
-          brand: data.brand || "PETOU",
-          size: data.size || "1 un",
-          price: Number(data.price) || 0,
-          formattedPrice: `R$ ${Number(data.price || 0).toFixed(2).replace(".", ",")}`,
-          category: data.category || "Rações para cães",
-          isDemo: Boolean(data.is_demo),
-          badge: data.badge || undefined,
-          description: data.description || "",
-          iconName: data.icon_name || "dog-bowl",
-          imageUrl: data.image_url || undefined,
-        };
+        return mapDbProduct(data as unknown as DbProductRow);
       }
     } catch (e) {
       console.error("Erro ao buscar produto por ID:", e);
     }
   }
 
-  return null;
+  return DEMO_PRODUCTS.find((p) => p.id === id) || null;
 }
 
 export async function fetchProductsByCategory(categoryNameOrSlug: string): Promise<Product[]> {
@@ -145,18 +172,32 @@ export async function fetchDeliveryAreas(): Promise<Neighborhood[]> {
   try {
     const { data, error } = await supabase
       .from("delivery_areas")
-      .select("*")
+      .select("id, name, fee")
+      .eq("active", true)
       .order("name", { ascending: true });
 
     if (error || !data || data.length === 0) {
       return BARCARENA_NEIGHBORHOODS;
     }
 
-    return data.map((area) => ({
+    const mapped = data.map((area) => ({
       id: String(area.id),
-      name: area.name,
+      name: String(area.name),
       fee: area.fee !== null && area.fee !== undefined ? Number(area.fee) : null,
     }));
+
+    // Keep "Centro (Barcarena-Sede)" first and "Outro (...)" last
+    return mapped.sort((a, b) => {
+      const aIsOutro = a.name.toLowerCase().startsWith("outro");
+      const bIsOutro = b.name.toLowerCase().startsWith("outro");
+      if (aIsOutro !== bIsOutro) return aIsOutro ? 1 : -1;
+
+      const aIsCentro = a.name.toLowerCase().startsWith("centro");
+      const bIsCentro = b.name.toLowerCase().startsWith("centro");
+      if (aIsCentro !== bIsCentro) return aIsCentro ? -1 : 1;
+
+      return a.name.localeCompare(b.name, "pt-BR");
+    });
   } catch (err) {
     console.error("Erro ao carregar áreas de entrega do Supabase:", err);
     return BARCARENA_NEIGHBORHOODS;
